@@ -71,8 +71,8 @@ export function HomePage() {
 
   const handleBulkDelete = async () => {
     try {
-      await bulkDelete.mutateAsync({ filenames: Array.from(selectedPlans) });
-      addToast(`${selectedPlans.size}件のプランをアーカイブしました`, 'success');
+      await bulkDelete.mutateAsync({ filenames: Array.from(selectedPlans), permanent: true });
+      addToast(`${selectedPlans.size}件のプランを削除しました`, 'success');
       clearSelection();
       setShowBulkDeleteDialog(false);
       setSelectionMode(false);
@@ -206,7 +206,7 @@ export function HomePage() {
         title="プランを一括削除"
       >
         <p className="text-sm text-muted-foreground mb-4">
-          選択した{selectedPlans.size}件のプランをアーカイブしますか？
+          選択した{selectedPlans.size}件のプランを完全に削除しますか？この操作は取り消せません。
         </p>
         <div className="max-h-40 overflow-y-auto mb-4">
           {Array.from(selectedPlans).map((filename) => (
