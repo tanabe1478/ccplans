@@ -44,8 +44,8 @@ export function PlanActions({ filename, onDeleted }: PlanActionsProps) {
 
   const handleDelete = async () => {
     try {
-      await deletePlan.mutateAsync({ filename });
-      addToast('プランをアーカイブしました', 'success');
+      await deletePlan.mutateAsync({ filename, permanent: true });
+      addToast('プランを削除しました', 'success');
       setShowDeleteDialog(false);
       onDeleted?.();
     } catch (err) {
@@ -204,7 +204,7 @@ export function PlanActions({ filename, onDeleted }: PlanActionsProps) {
         title="プランを削除"
       >
         <p className="text-sm text-muted-foreground mb-4">
-          このプランをアーカイブしますか？アーカイブされたプランは後から復元できます。
+          このプランを完全に削除しますか？この操作は取り消せません。
         </p>
         <p className="text-sm font-mono bg-muted p-2 rounded mb-4">
           {filename}

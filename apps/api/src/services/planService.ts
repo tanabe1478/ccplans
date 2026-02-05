@@ -222,9 +222,9 @@ export class PlanService {
   }
 
   /**
-   * Delete a plan (move to archive)
+   * Delete a plan (permanently by default)
    */
-  async deletePlan(filename: string, archive = true): Promise<void> {
+  async deletePlan(filename: string, archive = false): Promise<void> {
     this.validateFilename(filename);
     const filePath = join(this.plansDir, filename);
 
@@ -238,9 +238,9 @@ export class PlanService {
   }
 
   /**
-   * Bulk delete plans
+   * Bulk delete plans (permanently by default)
    */
-  async bulkDelete(filenames: string[], archive = true): Promise<void> {
+  async bulkDelete(filenames: string[], archive = false): Promise<void> {
     await Promise.all(filenames.map((f) => this.deletePlan(f, archive)));
   }
 
