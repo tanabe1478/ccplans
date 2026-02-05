@@ -95,18 +95,8 @@ describe('PlanService', () => {
   });
 
   describe('deletePlan', () => {
-    it('should archive plan by default', async () => {
+    it('should permanently delete plan by default', async () => {
       await service.deletePlan('test-plan.md');
-
-      const mainFiles = await readdir(testDir);
-      expect(mainFiles).not.toContain('test-plan.md');
-
-      const archiveFiles = await readdir(archiveDir);
-      expect(archiveFiles).toContain('test-plan.md');
-    });
-
-    it('should permanently delete when archive=false', async () => {
-      await service.deletePlan('test-plan.md', false);
 
       const mainFiles = await readdir(testDir);
       expect(mainFiles).not.toContain('test-plan.md');
@@ -118,6 +108,16 @@ describe('PlanService', () => {
       } catch {
         // Archive dir doesn't exist, which is fine
       }
+    });
+
+    it('should archive plan when archive=true', async () => {
+      await service.deletePlan('test-plan.md', true);
+
+      const mainFiles = await readdir(testDir);
+      expect(mainFiles).not.toContain('test-plan.md');
+
+      const archiveFiles = await readdir(archiveDir);
+      expect(archiveFiles).toContain('test-plan.md');
     });
   });
 
