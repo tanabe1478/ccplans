@@ -5,13 +5,13 @@ interface SectionNavProps {
   content: string;
 }
 
-interface Heading {
+export interface Heading {
   level: number;
   text: string;
   id: string;
 }
 
-function slugify(text: string): string {
+export function slugify(text: string): string {
   return text
     .toLowerCase()
     .replace(/[^\w\s-]/g, '')
@@ -20,7 +20,7 @@ function slugify(text: string): string {
     .trim();
 }
 
-function extractHeadings(content: string): Heading[] {
+export function extractHeadings(content: string): Heading[] {
   const headings: Heading[] = [];
   const lines = content.split('\n');
   let inCodeBlock = false;
