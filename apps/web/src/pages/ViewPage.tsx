@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { usePlan } from '@/lib/hooks/usePlans';
+import { usePlan, useUpdateStatus } from '@/lib/hooks/usePlans';
 import { PlanViewer } from '@/components/plan/PlanViewer';
 import { PlanActions } from '@/components/plan/PlanActions';
+import { StatusDropdown } from '@/components/plan/StatusDropdown';
+import { ProjectBadge } from '@/components/plan/ProjectBadge';
 import { HistoryPanel } from '@/components/plan/HistoryPanel';
 import { formatDate, formatFileSize } from '@/lib/utils';
+import type { PlanStatus } from '@ccplans/shared';
 import {
   Loader2,
   AlertCircle,
@@ -20,6 +23,7 @@ export function ViewPage() {
   const { filename } = useParams<{ filename: string }>();
   const navigate = useNavigate();
   const { data: plan, isLoading, error } = usePlan(filename || '');
+  const updateStatus = useUpdateStatus();
   const [activeTab, setActiveTab] = useState<Tab>('content');
 
   if (isLoading) {
@@ -58,7 +62,18 @@ export function ViewPage() {
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">{plan.title}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold">{plan.title}</h1>
+            {plan.frontmatter?.status && (
+              <StatusDropdown
+                currentStatus={plan.frontmatter.status}
+                onStatusChange={(status: PlanStatus) =>
+                  updateStatus.mutate({ filename: plan.filename, status })
+                }
+                disabled={updateStatus.isPending}
+              />
+            )}
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <FileText className="h-4 w-4" />
@@ -72,6 +87,9 @@ export function ViewPage() {
               <HardDrive className="h-4 w-4" />
               {formatFileSize(plan.size)}
             </span>
+            {plan.frontmatter?.projectPath && (
+              <ProjectBadge projectPath={plan.frontmatter.projectPath} />
+            )}
           </div>
         </div>
 
