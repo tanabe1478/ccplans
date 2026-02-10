@@ -11,7 +11,7 @@ test.describe.configure({ mode: 'serial' });
 test.describe('Dependencies functionality (Feature 13)', () => {
   test.beforeEach(async ({ request }) => {
     // Ensure frontmatter is enabled (may be disabled by parallel settings tests)
-    await request.put('http://localhost:3001/api/settings', {
+    await request.put(`${API_BASE_URL}/api/settings`, {
       data: { frontmatterEnabled: true },
     });
   });

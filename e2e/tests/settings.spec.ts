@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
-
-const API_BASE_URL = 'http://localhost:3001';
+import { API_BASE_URL } from '../lib/test-helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -104,7 +103,7 @@ test.describe('Settings - Frontmatter opt-out', () => {
       data: { frontmatterEnabled: false },
     });
 
-    await page.goto('http://localhost:5173/settings');
+    await page.goto('/settings');
     await expect(page.locator('h1')).toContainText('Settings');
     await expect(page.getByRole('heading', { name: 'Frontmatter Features' })).toBeVisible();
 
@@ -124,26 +123,23 @@ test.describe('Settings - Frontmatter opt-out', () => {
     await request.put(`${API_BASE_URL}/api/settings`, {
       data: { frontmatterEnabled: false },
     });
-    await page.goto('http://localhost:5173/kanban');
-    await page.waitForURL('http://localhost:5173/');
-    expect(page.url()).toBe('http://localhost:5173/');
+    await page.goto('/kanban');
+    await expect(page).toHaveURL('/');
   });
 
   test('calendar redirects to home when frontmatter disabled', async ({ page, request }) => {
     await request.put(`${API_BASE_URL}/api/settings`, {
       data: { frontmatterEnabled: false },
     });
-    await page.goto('http://localhost:5173/calendar');
-    await page.waitForURL('http://localhost:5173/');
-    expect(page.url()).toBe('http://localhost:5173/');
+    await page.goto('/calendar');
+    await expect(page).toHaveURL('/');
   });
 
   test('dependencies redirects to home when frontmatter disabled', async ({ page, request }) => {
     await request.put(`${API_BASE_URL}/api/settings`, {
       data: { frontmatterEnabled: false },
     });
-    await page.goto('http://localhost:5173/dependencies');
-    await page.waitForURL('http://localhost:5173/');
-    expect(page.url()).toBe('http://localhost:5173/');
+    await page.goto('/dependencies');
+    await expect(page).toHaveURL('/');
   });
 });

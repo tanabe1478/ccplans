@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { API_BASE_URL } from '../lib/test-helpers';
 
 // Run tests serially to avoid state conflicts
 test.describe.configure({ mode: 'serial' });
@@ -6,7 +7,7 @@ test.describe.configure({ mode: 'serial' });
 test.describe('Kanban & Calendar Views (Feature 8)', () => {
   test.beforeEach(async ({ request }) => {
     // Ensure frontmatter is enabled (may be disabled by parallel settings tests)
-    await request.put('http://localhost:3001/api/settings', {
+    await request.put(`${API_BASE_URL}/api/settings`, {
       data: { frontmatterEnabled: true },
     });
   });
