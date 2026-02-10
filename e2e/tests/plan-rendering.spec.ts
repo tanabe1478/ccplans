@@ -114,6 +114,64 @@ test.describe('Plan detail rendering', () => {
     expect(color).not.toBe(codeColor);
   });
 
+  test('should NOT display line numbers on detail page (view mode)', async ({ page }) => {
+    await page.goto(`/plan/${TEST_PLAN_FILENAME}`);
+    await expect(page.getByRole('heading', { name: 'Rendering Test Plan' }).first()).toBeVisible();
+
+    // Line number gutters should NOT be rendered on detail page
+    const lineGutters = page.locator('.markdown-content .line-number-gutter');
+    await expect(lineGutters).toHaveCount(0);
+
+    // with-line-numbers class should NOT be applied
+    const article = page.locator('.markdown-content');
+    await expect(article).not.toHaveClass(/with-line-numbers/);
+  });
+
+  test('should display Review link on detail page', async ({ page }) => {
+    await page.goto(`/plan/${TEST_PLAN_FILENAME}`);
+    await expect(page.getByRole('heading', { name: 'Rendering Test Plan' }).first()).toBeVisible();
+
+    // Review link should be visible
+    const reviewLink = page.getByRole('link', { name: 'Review' });
+    await expect(reviewLink).toBeVisible();
+    await expect(reviewLink).toHaveAttribute('href', `/plan/${TEST_PLAN_FILENAME}/review`);
+  });
+
+  test('should display section navigation sidebar on desktop', async ({ page }) => {
+    // Ensure desktop viewport
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto(`/plan/${TEST_PLAN_FILENAME}`);
+    await expect(page.getByRole('heading', { name: 'Rendering Test Plan' }).first()).toBeVisible();
+
+    // Section nav should be visible with TOC heading
+    const sectionNav = page.locator('.section-nav');
+    await expect(sectionNav.first()).toBeVisible();
+    await expect(sectionNav.first().getByText('目次')).toBeVisible();
+
+    // Should list headings from the content
+    await expect(sectionNav.first().getByText('Overview')).toBeVisible();
+    await expect(sectionNav.first().getByText('Summary Table')).toBeVisible();
+    await expect(sectionNav.first().getByText('Details')).toBeVisible();
+    await expect(sectionNav.first().getByText('Code Example')).toBeVisible();
+  });
+
+  test('should navigate to heading when section nav item is clicked', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto(`/plan/${TEST_PLAN_FILENAME}`);
+    await expect(page.getByRole('heading', { name: 'Rendering Test Plan' }).first()).toBeVisible();
+
+    // Click on "Code Example" in section nav
+    const sectionNav = page.locator('.section-nav').first();
+    await sectionNav.getByText('Code Example').click();
+
+    // Wait for smooth scroll
+    await page.waitForTimeout(500);
+
+    // The heading should be visible in the viewport
+    const heading = page.locator('.markdown-content').getByText('Code Example');
+    await expect(heading).toBeInViewport();
+  });
+
   test('should render markdown tables as HTML tables', async ({ page }) => {
     await page.goto(`/plan/${TEST_PLAN_FILENAME}`);
     await expect(page.getByRole('heading', { name: 'Rendering Test Plan' }).first()).toBeVisible();

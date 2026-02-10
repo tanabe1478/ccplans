@@ -17,13 +17,13 @@ describe('parseQuery', () => {
 
     it('should parse quoted phrase', () => {
       const result = parseQuery('"exact phrase"');
-      expect(result.textQuery).toBe('"exact phrase"');
+      expect(result.textQuery).toBe('exact phrase');
       expect(result.filters).toHaveLength(0);
     });
 
     it('should parse single-quoted phrase', () => {
       const result = parseQuery("'single quoted'");
-      expect(result.textQuery).toBe("'single quoted'");
+      expect(result.textQuery).toBe('single quoted');
       expect(result.filters).toHaveLength(0);
     });
   });

@@ -121,6 +121,203 @@
   @apply text-primary underline;
 }
 
+/* Line numbers for block elements */
+.markdown-content.with-line-numbers > :first-child > [data-line] {
+  position: relative;
+  padding-left: 3.5rem;
+}
+
+.markdown-content.with-line-numbers [data-line] {
+  position: relative;
+  padding-left: 3.5rem;
+}
+
+.line-number-gutter {
+  position: absolute;
+  left: 0;
+  width: 2.5rem;
+  text-align: right;
+  font-size: 0.75rem;
+  line-height: inherit;
+  color: hsl(var(--muted-foreground));
+  opacity: 0.5;
+  user-select: none;
+  pointer-events: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  padding-top: 0.125em;
+}
+
+/* Adjust line number position for headings */
+.markdown-content.with-line-numbers h1 .line-number-gutter,
+.markdown-content.with-line-numbers h2 .line-number-gutter,
+.markdown-content.with-line-numbers h3 .line-number-gutter {
+  padding-top: 0.2em;
+}
+
+/* Adjust for pre/code blocks */
+.markdown-content.with-line-numbers pre[data-line] {
+  padding-left: 3.5rem;
+}
+
+.markdown-content.with-line-numbers pre .line-number-gutter {
+  top: 1rem;
+}
+
+/* Adjust for blockquote */
+.markdown-content.with-line-numbers blockquote[data-line] {
+  padding-left: 3.5rem;
+  border-left-width: 4px;
+}
+
+.markdown-content.with-line-numbers blockquote .line-number-gutter {
+  left: 0;
+}
+
+/* Adjust for lists */
+.markdown-content.with-line-numbers ul[data-line],
+.markdown-content.with-line-numbers ol[data-line] {
+  padding-left: 3.5rem;
+}
+
+/* Review diff file view (GitHub-style) */
+.review-file {
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.review-file-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: hsl(var(--muted));
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 0.8125rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.review-file-content {
+  overflow-x: hidden;
+}
+
+.review-diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.review-diff-line {
+  transition: background-color 0.1s;
+}
+
+.review-diff-line:hover {
+  background-color: hsl(var(--muted) / 0.5);
+}
+
+.review-diff-gutter {
+  width: 4rem;
+  min-width: 4rem;
+  padding: 0 0.75rem;
+  text-align: right;
+  color: hsl(var(--muted-foreground));
+  opacity: 0.6;
+  user-select: none;
+  cursor: pointer;
+  vertical-align: top;
+  border-right: 1px solid hsl(var(--border));
+  transition: color 0.15s;
+}
+
+.review-diff-gutter:hover {
+  opacity: 1;
+  color: hsl(217 91% 60%);
+}
+
+.review-diff-code {
+  padding: 0 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.review-diff-code span {
+  display: block;
+  min-height: 1.5em;
+}
+
+/* "+" button: hidden by default, shown on row hover */
+.review-add-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background-color: hsl(217 91% 60%);
+  color: white;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.review-line-num {
+  display: inline;
+}
+
+.review-diff-line:hover .review-add-btn {
+  display: inline-flex;
+}
+
+.review-diff-line:hover .review-line-num {
+  display: none;
+}
+
+/* Line highlight states */
+.review-diff-line.has-comment {
+  background-color: hsl(217 91% 60% / 0.06);
+}
+
+.review-diff-line.selecting {
+  background-color: hsl(217 91% 60% / 0.08);
+}
+
+.dark .review-diff-line.has-comment {
+  background-color: hsl(217 91% 60% / 0.05);
+}
+
+.dark .review-diff-line.selecting {
+  background-color: hsl(217 91% 60% / 0.1);
+}
+
+/* Comment rows within diff table */
+.review-comment-cell {
+  padding: 0.5rem 1rem;
+  border-top: 1px solid hsl(var(--border));
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+}
+
+/* Section navigation styles */
+.section-nav {
+  @apply rounded-lg border bg-card p-4;
+}
+
+.section-nav-item {
+  @apply block py-1 px-2 rounded transition-colors;
+}
+
+.section-nav-item:hover {
+  @apply bg-muted;
+}
+
+/* Scroll margin for heading anchors */
+.markdown-content [id] {
+  scroll-margin-top: 1rem;
+}
+
 /* Override highlight.js background to use our existing bg-muted */
 .markdown-content .hljs {
   background: transparent;

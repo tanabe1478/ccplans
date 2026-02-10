@@ -6,6 +6,7 @@ import { PlanActions } from '@/components/plan/PlanActions';
 import { StatusDropdown } from '@/components/plan/StatusDropdown';
 import { ProjectBadge } from '@/components/plan/ProjectBadge';
 import { HistoryPanel } from '@/components/plan/HistoryPanel';
+import { SectionNav } from '@/components/plan/SectionNav';
 import { formatDate, formatFileSize } from '@/lib/utils';
 import type { PlanStatus } from '@ccplans/shared';
 import {
@@ -15,6 +16,11 @@ import {
   Calendar,
   HardDrive,
   FileText,
+  MessageSquareText,
+  Signal,
+  User,
+  Tag,
+  GitBranch,
 } from 'lucide-react';
 
 type Tab = 'content' | 'history';
@@ -90,29 +96,64 @@ export function ViewPage() {
             {plan.frontmatter?.projectPath && (
               <ProjectBadge projectPath={plan.frontmatter.projectPath} />
             )}
+            {plan.frontmatter?.priority && (
+              <span className="flex items-center gap-1">
+                <Signal className="h-4 w-4" />
+                {plan.frontmatter.priority}
+              </span>
+            )}
+            {plan.frontmatter?.assignee && (
+              <span className="flex items-center gap-1">
+                <User className="h-4 w-4" />
+                {plan.frontmatter.assignee}
+              </span>
+            )}
           </div>
+          {plan.frontmatter?.tags && plan.frontmatter.tags.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Tag className="h-4 w-4 text-muted-foreground" />
+              {plan.frontmatter.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+          {plan.frontmatter?.blockedBy && plan.frontmatter.blockedBy.length > 0 && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-orange-600 dark:text-orange-400">
+              <GitBranch className="h-4 w-4" />
+              <span>Blocked by:</span>
+              {plan.frontmatter.blockedBy.map((dep) => (
+                <Link
+                  key={dep}
+                  to={`/plan/${encodeURIComponent(dep)}`}
+                  className="underline hover:text-orange-800 dark:hover:text-orange-300"
+                >
+                  {dep}
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
-        <PlanActions
-          filename={plan.filename}
-          title={plan.title}
-          onDeleted={() => navigate('/')}
-        />
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/plan/${plan.filename}/review`}
+            className="inline-flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
+          >
+            <MessageSquareText className="h-4 w-4" />
+            Review
+          </Link>
+          <PlanActions
+            filename={plan.filename}
+            title={plan.title}
+            onDeleted={() => navigate('/')}
+          />
+        </div>
       </div>
-
-      {/* Sections */}
-      {plan.sections.length > 0 && (
-        <div className="mb-6 flex flex-wrap gap-2">
-          {plan.sections.map((section) => (
-            <span
-              key={section}
-              className="inline-flex items-center rounded-full bg-secondary px-3 py-1 text-sm"
-            >
-              {section}
-            </span>
-          ))}
-        </div>
-      )}
 
       {/* Tabs */}
       <div className="mb-4 flex border-b">
@@ -139,13 +180,33 @@ export function ViewPage() {
       </div>
 
       {/* Tab content */}
-      <div className="rounded-lg border bg-card p-6">
-        {activeTab === 'content' ? (
-          <PlanViewer plan={plan} />
-        ) : (
+      {activeTab === 'content' ? (
+        <div className="flex gap-6">
+          {/* Main content */}
+          <div className="min-w-0 flex-1 rounded-lg border bg-card p-6">
+            <PlanViewer plan={plan} />
+          </div>
+          {/* Section navigation sidebar */}
+          {plan.sections.length > 0 && (
+            <aside className="hidden lg:block w-56 shrink-0">
+              <div className="sticky top-4">
+                <SectionNav content={plan.content} />
+              </div>
+            </aside>
+          )}
+        </div>
+      ) : (
+        <div className="rounded-lg border bg-card p-6">
           <HistoryPanel filename={plan.filename} />
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Mobile section nav (below content on small screens) */}
+      {activeTab === 'content' && plan.sections.length > 0 && (
+        <div className="mt-4 rounded-lg border bg-card p-4 lg:hidden">
+          <SectionNav content={plan.content} />
+        </div>
+      )}
     </div>
   );
 }
