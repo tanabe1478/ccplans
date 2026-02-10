@@ -29,7 +29,21 @@ function formatLineRef(line: number | [number, number]): string {
   return `L${line}`;
 }
 
-export function useReviewComments(filename: string) {
+function buildQuotedLines(content: string, line: number | [number, number]): string {
+  if (!content) return '';
+  const lines = content.split('\n');
+  const [start, end] = Array.isArray(line) ? line : [line, line];
+  const quoted: string[] = [];
+  for (let i = start; i <= end; i++) {
+    const idx = i - 1; // 1-indexed to 0-indexed
+    if (idx >= 0 && idx < lines.length) {
+      quoted.push(`> ${lines[idx]}`);
+    }
+  }
+  return quoted.join('\n');
+}
+
+export function useReviewComments(filename: string, content: string = '') {
   const [comments, setComments] = useState<ReviewComment[]>(() =>
     loadComments(filename),
   );
@@ -81,11 +95,22 @@ export function useReviewComments(filename: string) {
     persist([]);
   }, [persist]);
 
+  const extractQuotedLines = useCallback(
+    (line: number | [number, number]): string => {
+      return buildQuotedLines(content, line);
+    },
+    [content],
+  );
+
   const generatePrompt = useCallback(
     (comment: ReviewComment): string => {
+      const quoted = buildQuotedLines(content, comment.line);
+      if (quoted) {
+        return `${filename}:${formatLineRef(comment.line)}\n${quoted}\n${comment.body}`;
+      }
       return `${filename}:${formatLineRef(comment.line)}\n${comment.body}`;
     },
-    [filename],
+    [filename, content],
   );
 
   const generateAllPrompts = useCallback((): string => {
@@ -98,6 +123,7 @@ export function useReviewComments(filename: string) {
     updateComment,
     deleteComment,
     clearAllComments,
+    extractQuotedLines,
     generatePrompt,
     generateAllPrompts,
     commentCount: comments.length,

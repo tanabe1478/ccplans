@@ -3,7 +3,6 @@ import { usePlan } from '@/lib/hooks/usePlans';
 import { useReviewComments } from '@/lib/hooks/useReviewComments';
 import { ReviewToolbar } from '@/components/review/ReviewToolbar';
 import { ReviewViewer } from '@/components/review/ReviewViewer';
-import { SectionNav } from '@/components/plan/SectionNav';
 import { useUiStore } from '@/stores/uiStore';
 import type { ReviewComment } from '@/lib/types/review';
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
@@ -18,10 +17,11 @@ export function ReviewPage() {
     updateComment,
     deleteComment,
     clearAllComments,
+    extractQuotedLines,
     generatePrompt,
     generateAllPrompts,
     commentCount,
-  } = useReviewComments(filename || '');
+  } = useReviewComments(filename || '', plan?.content || '');
 
   const copyToClipboard = async (text: string, message: string) => {
     try {
@@ -90,26 +90,16 @@ export function ReviewPage() {
         />
       </div>
 
-      {/* Content with section nav */}
-      <div className="flex gap-6">
-        <div className="min-w-0 flex-1 rounded-lg border bg-card p-6">
-          <ReviewViewer
-            plan={plan}
-            comments={comments}
-            onAddComment={addComment}
-            onUpdateComment={updateComment}
-            onDeleteComment={deleteComment}
-            onCopyPrompt={handleCopyPrompt}
-          />
-        </div>
-        {plan.sections.length > 0 && (
-          <aside className="hidden lg:block w-56 shrink-0">
-            <div className="sticky top-4">
-              <SectionNav content={plan.content} />
-            </div>
-          </aside>
-        )}
-      </div>
+      {/* Content */}
+      <ReviewViewer
+        plan={plan}
+        comments={comments}
+        onAddComment={addComment}
+        onUpdateComment={updateComment}
+        onDeleteComment={deleteComment}
+        onCopyPrompt={handleCopyPrompt}
+        extractQuotedLines={extractQuotedLines}
+      />
     </div>
   );
 }

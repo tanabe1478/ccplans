@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 
 interface CommentFormProps {
   line: number | [number, number];
+  quotedContent?: string;
   initialBody?: string;
   onSubmit: (body: string) => void;
   onCancel: () => void;
@@ -14,7 +15,7 @@ function formatLineBadge(line: number | [number, number]): string {
   return `L${line}`;
 }
 
-export function CommentForm({ line, initialBody = '', onSubmit, onCancel }: CommentFormProps) {
+export function CommentForm({ line, quotedContent, initialBody = '', onSubmit, onCancel }: CommentFormProps) {
   const [body, setBody] = useState(initialBody);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -41,20 +42,28 @@ export function CommentForm({ line, initialBody = '', onSubmit, onCancel }: Comm
   };
 
   return (
-    <div className="inline-comment-form my-2 ml-14 rounded border border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30">
-      <div className="flex items-center gap-2 px-3 pt-2">
+    <div className="inline-comment-form my-2 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      {/* Header */}
+      <div className="flex items-center gap-2 border-b border-border bg-muted/50 px-3 py-1.5">
         <span className="rounded bg-amber-200 px-1.5 py-0.5 text-xs font-mono text-amber-800 dark:bg-amber-800 dark:text-amber-200">
           {formatLineBadge(line)}
         </span>
       </div>
-      <div className="p-3 pt-2">
+      {/* Quoted content preview */}
+      {quotedContent && (
+        <div className="border-b border-border bg-muted/30 px-3 py-2">
+          <pre className="whitespace-pre-wrap text-xs font-mono text-muted-foreground">{quotedContent}</pre>
+        </div>
+      )}
+      {/* Form body */}
+      <div className="p-3">
         <textarea
           ref={textareaRef}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Add a comment... (Cmd+Enter to submit, Escape to cancel)"
-          className="w-full rounded border border-amber-300 bg-white p-2 text-sm dark:border-amber-700 dark:bg-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-amber-400"
+          className="w-full rounded border border-border bg-background p-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
           rows={3}
         />
         <div className="mt-2 flex items-center justify-end gap-2">

@@ -1,8 +1,4 @@
-import { createElement, useRef, useState, useCallback, type ReactNode } from 'react';
-import ReactMarkdown from 'react-markdown';
-import rehypeHighlight from 'rehype-highlight';
-import rehypeSlug from 'rehype-slug';
-import remarkGfm from 'remark-gfm';
+import { Fragment, useRef, useState, useCallback } from 'react';
 import type { PlanDetail } from '@ccplans/shared';
 import type { ReviewComment } from '@/lib/types/review';
 import { CommentForm } from './CommentForm';
@@ -15,12 +11,7 @@ interface ReviewViewerProps {
   onUpdateComment: (id: string, body: string) => void;
   onDeleteComment: (id: string) => void;
   onCopyPrompt: (comment: ReviewComment) => void;
-}
-
-interface NodeWithPosition {
-  position?: {
-    start?: { line?: number };
-  };
+  extractQuotedLines: (line: number | [number, number]) => string;
 }
 
 function getCommentsForLine(comments: ReviewComment[], line: number): ReviewComment[] {
@@ -39,14 +30,18 @@ export function ReviewViewer({
   onUpdateComment,
   onDeleteComment,
   onCopyPrompt,
+  extractQuotedLines,
 }: ReviewViewerProps) {
   const [activeForm, setActiveForm] = useState<{ line: number | [number, number] } | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const dragStartRef = useRef<number | null>(null);
   const [dragEnd, setDragEnd] = useState<number | null>(null);
   const isDraggingRef = useRef(false);
+  const [lastClickedLine, setLastClickedLine] = useState<number | null>(null);
+  const [selectedRange, setSelectedRange] = useState<[number, number] | null>(null);
 
-  const handleGutterMouseDown = useCallback((line: number) => {
+  const handleGutterMouseDown = useCallback((line: number, shiftKey: boolean) => {
+    if (shiftKey) return;
     dragStartRef.current = line;
     isDraggingRef.current = false;
     setDragEnd(null);
@@ -60,7 +55,21 @@ export function ReviewViewer({
   }, []);
 
   const handleGutterMouseUp = useCallback(
-    (line: number) => {
+    (line: number, shiftKey: boolean) => {
+      if (shiftKey && lastClickedLine != null) {
+        const lo = Math.min(lastClickedLine, line);
+        const hi = Math.max(lastClickedLine, line);
+        const range: [number, number] = [lo, hi];
+        setSelectedRange(range);
+        setEditingId(null);
+        setActiveForm({ line: range });
+        setLastClickedLine(line);
+        dragStartRef.current = null;
+        isDraggingRef.current = false;
+        setDragEnd(null);
+        return;
+      }
+
       const start = dragStartRef.current;
       if (start == null) return;
 
@@ -76,10 +85,12 @@ export function ReviewViewer({
       dragStartRef.current = null;
       isDraggingRef.current = false;
       setDragEnd(null);
+      setSelectedRange(null);
       setEditingId(null);
       setActiveForm({ line: selectedLine });
+      setLastClickedLine(line);
     },
-    [],
+    [lastClickedLine],
   );
 
   const handleFormSubmit = useCallback(
@@ -87,6 +98,7 @@ export function ReviewViewer({
       if (activeForm) {
         onAddComment(activeForm.line, body);
         setActiveForm(null);
+        setSelectedRange(null);
       }
     },
     [activeForm, onAddComment],
@@ -94,17 +106,21 @@ export function ReviewViewer({
 
   const handleFormCancel = useCallback(() => {
     setActiveForm(null);
+    setSelectedRange(null);
   }, []);
 
   const isLineInDragRange = useCallback(
     (line: number): boolean => {
+      if (selectedRange != null) {
+        return line >= selectedRange[0] && line <= selectedRange[1];
+      }
       const start = dragStartRef.current;
       if (start == null || dragEnd == null) return false;
       const lo = Math.min(start, dragEnd);
       const hi = Math.max(start, dragEnd);
       return line >= lo && line <= hi;
     },
-    [dragEnd],
+    [dragEnd, selectedRange],
   );
 
   const hasCommentOnLine = useCallback(
@@ -119,106 +135,94 @@ export function ReviewViewer({
     [comments],
   );
 
-  function reviewLineNumberComponent(tag: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return function ReviewLineNumbered({ node, children, ...props }: any) {
-      const typedNode = node as NodeWithPosition | undefined;
-      const line = typedNode?.position?.start?.line;
-      const lineComments = line != null ? getCommentsForLine(comments, line) : [];
-      const showForm = activeForm != null && !Array.isArray(activeForm.line) && activeForm.line === line;
-      const showFormRange = activeForm != null && Array.isArray(activeForm.line) && activeForm.line[0] === line;
-      const hasComment = line != null && hasCommentOnLine(line);
-      const inDragRange = line != null && isLineInDragRange(line);
-
-      return createElement(
-        'div',
-        { key: line },
-        createElement(
-          tag,
-          {
-            ...props,
-            'data-line': line,
-            className: [
-              props.className || '',
-              hasComment ? 'has-comment' : '',
-              inDragRange ? 'selecting' : '',
-            ]
-              .filter(Boolean)
-              .join(' '),
-          },
-          line != null
-            ? createElement(
-                'span',
-                {
-                  className: 'line-number-gutter review-gutter',
-                  'aria-hidden': 'true',
-                  onMouseDown: (e: React.MouseEvent) => {
-                    e.preventDefault();
-                    handleGutterMouseDown(line);
-                  },
-                  onMouseEnter: () => handleGutterMouseEnter(line),
-                  onMouseUp: () => handleGutterMouseUp(line),
-                },
-                line,
-              )
-            : null,
-          children as ReactNode,
-        ),
-        // Render inline comments and form after the block element
-        ...lineComments.map((comment) =>
-          createElement(
-            'div',
-            { key: comment.id },
-            createElement(InlineComment, {
-              comment,
-              isEditing: editingId === comment.id,
-              onEdit: () => setEditingId(comment.id),
-              onDelete: () => {
-                onDeleteComment(comment.id);
-                if (editingId === comment.id) setEditingId(null);
-              },
-              onCopyPrompt: () => onCopyPrompt(comment),
-              onEditSubmit: (body: string) => {
-                onUpdateComment(comment.id, body);
-                setEditingId(null);
-              },
-              onEditCancel: () => setEditingId(null),
-            }),
-          ),
-        ),
-        (showForm || showFormRange)
-          ? createElement(CommentForm, {
-              key: 'form',
-              line: activeForm!.line,
-              onSubmit: handleFormSubmit,
-              onCancel: handleFormCancel,
-            })
-          : null,
-      );
-    };
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const reviewComponents: Record<string, any> = {};
-  const blockTags = [
-    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'p', 'blockquote', 'pre', 'table', 'hr',
-    'ul', 'ol',
-  ];
-
-  for (const t of blockTags) {
-    reviewComponents[t] = reviewLineNumberComponent(t);
-  }
+  const lines = plan.content.split('\n');
 
   return (
-    <article className="markdown-content with-line-numbers review-mode mt-6">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeHighlight, rehypeSlug]}
-        components={reviewComponents}
-      >
-        {plan.content}
-      </ReactMarkdown>
-    </article>
+    <div className="review-file">
+      <div className="review-file-header">
+        <span className="truncate">{plan.filename}</span>
+        <span className="shrink-0 text-muted-foreground">{lines.length} lines</span>
+      </div>
+      <div className="review-file-content">
+        <table className="review-diff-table">
+          <tbody>
+            {lines.map((lineContent, index) => {
+              const lineNum = index + 1;
+              const lineComments = getCommentsForLine(comments, lineNum);
+              const showForm =
+                activeForm != null && !Array.isArray(activeForm.line) && activeForm.line === lineNum;
+              const showFormRange =
+                activeForm != null && Array.isArray(activeForm.line) && activeForm.line[0] === lineNum;
+              const hasComment = hasCommentOnLine(lineNum);
+              const inRange = isLineInDragRange(lineNum);
+
+              const rowClass = [
+                'review-diff-line',
+                hasComment ? 'has-comment' : '',
+                inRange ? 'selecting' : '',
+              ]
+                .filter(Boolean)
+                .join(' ');
+
+              return (
+                <Fragment key={lineNum}>
+                  <tr className={rowClass} data-line={lineNum}>
+                    <td
+                      className="review-diff-gutter"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleGutterMouseDown(lineNum, e.shiftKey);
+                      }}
+                      onMouseEnter={() => handleGutterMouseEnter(lineNum)}
+                      onMouseUp={(e) => handleGutterMouseUp(lineNum, e.shiftKey)}
+                    >
+                      <span className="review-line-num">{lineNum}</span>
+                      <span className="review-add-btn">+</span>
+                    </td>
+                    <td className="review-diff-code">
+                      <span>{lineContent}</span>
+                    </td>
+                  </tr>
+                  {lineComments.map((comment) => (
+                    <tr key={comment.id} className="review-comment-row">
+                      <td colSpan={2} className="review-comment-cell">
+                        <InlineComment
+                          comment={comment}
+                          quotedContent={extractQuotedLines(comment.line)}
+                          isEditing={editingId === comment.id}
+                          onEdit={() => setEditingId(comment.id)}
+                          onDelete={() => {
+                            onDeleteComment(comment.id);
+                            if (editingId === comment.id) setEditingId(null);
+                          }}
+                          onCopyPrompt={() => onCopyPrompt(comment)}
+                          onEditSubmit={(body: string) => {
+                            onUpdateComment(comment.id, body);
+                            setEditingId(null);
+                          }}
+                          onEditCancel={() => setEditingId(null)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                  {(showForm || showFormRange) && (
+                    <tr className="review-comment-row">
+                      <td colSpan={2} className="review-comment-cell">
+                        <CommentForm
+                          line={activeForm!.line}
+                          quotedContent={extractQuotedLines(activeForm!.line)}
+                          onSubmit={handleFormSubmit}
+                          onCancel={handleFormCancel}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }

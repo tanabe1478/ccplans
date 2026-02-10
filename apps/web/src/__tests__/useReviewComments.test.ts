@@ -30,12 +30,30 @@ function formatLineRef(line: number | [number, number]): string {
   return `L${line}`;
 }
 
-function generatePrompt(filename: string, comment: ReviewComment): string {
+function buildQuotedLines(content: string, line: number | [number, number]): string {
+  if (!content) return '';
+  const lines = content.split('\n');
+  const [start, end] = Array.isArray(line) ? line : [line, line];
+  const quoted: string[] = [];
+  for (let i = start; i <= end; i++) {
+    const idx = i - 1;
+    if (idx >= 0 && idx < lines.length) {
+      quoted.push(`> ${lines[idx]}`);
+    }
+  }
+  return quoted.join('\n');
+}
+
+function generatePrompt(filename: string, comment: ReviewComment, content: string = ''): string {
+  const quoted = buildQuotedLines(content, comment.line);
+  if (quoted) {
+    return `${filename}:${formatLineRef(comment.line)}\n${quoted}\n${comment.body}`;
+  }
   return `${filename}:${formatLineRef(comment.line)}\n${comment.body}`;
 }
 
-function generateAllPrompts(filename: string, comments: ReviewComment[]): string {
-  return comments.map((c) => generatePrompt(filename, c)).join('\n\n=====\n\n');
+function generateAllPrompts(filename: string, comments: ReviewComment[], content: string = ''): string {
+  return comments.map((c) => generatePrompt(filename, c, content)).join('\n\n=====\n\n');
 }
 
 function makeComment(overrides: Partial<ReviewComment> = {}): ReviewComment {
@@ -48,6 +66,13 @@ function makeComment(overrides: Partial<ReviewComment> = {}): ReviewComment {
     ...overrides,
   };
 }
+
+const SAMPLE_CONTENT = `# Title
+## Overview
+This is line 3.
+Some details here.
+## Summary
+Final line.`;
 
 describe('useReviewComments logic', () => {
   let storage: Record<string, string>;
@@ -155,29 +180,66 @@ describe('useReviewComments logic', () => {
     });
   });
 
+  describe('buildQuotedLines', () => {
+    it('should quote a single line', () => {
+      expect(buildQuotedLines(SAMPLE_CONTENT, 3)).toBe('> This is line 3.');
+    });
+
+    it('should quote a range of lines', () => {
+      const result = buildQuotedLines(SAMPLE_CONTENT, [2, 4]);
+      expect(result).toBe('> ## Overview\n> This is line 3.\n> Some details here.');
+    });
+
+    it('should return empty string for empty content', () => {
+      expect(buildQuotedLines('', 1)).toBe('');
+    });
+
+    it('should handle out-of-bounds lines gracefully', () => {
+      expect(buildQuotedLines(SAMPLE_CONTENT, 100)).toBe('');
+    });
+
+    it('should handle partial out-of-bounds range', () => {
+      const result = buildQuotedLines(SAMPLE_CONTENT, [5, 10]);
+      expect(result).toBe('> ## Summary\n> Final line.');
+    });
+  });
+
   describe('generatePrompt', () => {
-    it('should format single-line comment', () => {
+    it('should format single-line comment with quoted content', () => {
+      const comment = makeComment({ line: 3, body: 'Fix this logic' });
+      expect(generatePrompt('plan.md', comment, SAMPLE_CONTENT)).toBe(
+        'plan.md:L3\n> This is line 3.\nFix this logic',
+      );
+    });
+
+    it('should format range comment with quoted content', () => {
+      const comment = makeComment({ line: [2, 3], body: 'Refactor this section' });
+      expect(generatePrompt('plan.md', comment, SAMPLE_CONTENT)).toBe(
+        'plan.md:L2-L3\n> ## Overview\n> This is line 3.\nRefactor this section',
+      );
+    });
+
+    it('should fallback to no quotes when content is empty', () => {
       const comment = makeComment({ line: 42, body: 'Fix this logic' });
       expect(generatePrompt('plan.md', comment)).toBe('plan.md:L42\nFix this logic');
     });
 
-    it('should format range comment', () => {
-      const comment = makeComment({ line: [10, 20], body: 'Refactor this section' });
-      expect(generatePrompt('plan.md', comment)).toBe('plan.md:L10-L20\nRefactor this section');
-    });
-
     it('should handle multiline comment body', () => {
-      const comment = makeComment({ line: 5, body: 'Line 1\nLine 2' });
-      expect(generatePrompt('plan.md', comment)).toBe('plan.md:L5\nLine 1\nLine 2');
+      const comment = makeComment({ line: 1, body: 'Line 1\nLine 2' });
+      expect(generatePrompt('plan.md', comment, SAMPLE_CONTENT)).toBe(
+        'plan.md:L1\n> # Title\nLine 1\nLine 2',
+      );
     });
   });
 
   describe('generateAllPrompts', () => {
     it('should join prompts with ===== separator', () => {
       const c1 = makeComment({ line: 1, body: 'First' });
-      const c2 = makeComment({ line: 10, body: 'Second' });
-      const result = generateAllPrompts('plan.md', [c1, c2]);
-      expect(result).toBe('plan.md:L1\nFirst\n\n=====\n\nplan.md:L10\nSecond');
+      const c2 = makeComment({ line: 3, body: 'Second' });
+      const result = generateAllPrompts('plan.md', [c1, c2], SAMPLE_CONTENT);
+      expect(result).toBe(
+        'plan.md:L1\n> # Title\nFirst\n\n=====\n\nplan.md:L3\n> This is line 3.\nSecond',
+      );
     });
 
     it('should return empty string for no comments', () => {
@@ -185,9 +247,9 @@ describe('useReviewComments logic', () => {
     });
 
     it('should return single prompt without separator', () => {
-      const comment = makeComment({ line: 5, body: 'Only one' });
-      const result = generateAllPrompts('plan.md', [comment]);
-      expect(result).toBe('plan.md:L5\nOnly one');
+      const comment = makeComment({ line: 1, body: 'Only one' });
+      const result = generateAllPrompts('plan.md', [comment], SAMPLE_CONTENT);
+      expect(result).toBe('plan.md:L1\n> # Title\nOnly one');
       expect(result).not.toContain('=====');
     });
   });

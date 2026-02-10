@@ -4,6 +4,7 @@ import type { ReviewComment } from '@/lib/types/review';
 
 interface InlineCommentProps {
   comment: ReviewComment;
+  quotedContent: string;
   isEditing: boolean;
   onEdit: () => void;
   onDelete: () => void;
@@ -21,6 +22,7 @@ function formatLineBadge(line: number | [number, number]): string {
 
 export function InlineComment({
   comment,
+  quotedContent,
   isEditing,
   onEdit,
   onDelete,
@@ -32,6 +34,7 @@ export function InlineComment({
     return (
       <CommentForm
         line={comment.line}
+        quotedContent={quotedContent}
         initialBody={comment.body}
         onSubmit={onEditSubmit}
         onCancel={onEditCancel}
@@ -40,26 +43,24 @@ export function InlineComment({
   }
 
   return (
-    <div className="inline-comment my-2 ml-14 rounded border-l-4 border-amber-400 bg-amber-50 p-3 dark:border-amber-600 dark:bg-amber-950/30">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1">
-          <span className="mr-2 rounded bg-amber-200 px-1.5 py-0.5 text-xs font-mono text-amber-800 dark:bg-amber-800 dark:text-amber-200">
-            {formatLineBadge(comment.line)}
-          </span>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{comment.body}</p>
-        </div>
+    <div className="inline-comment my-2 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/50 px-3 py-1.5">
+        <span className="rounded bg-amber-200 px-1.5 py-0.5 text-xs font-mono text-amber-800 dark:bg-amber-800 dark:text-amber-200">
+          {formatLineBadge(comment.line)}
+        </span>
         <div className="flex shrink-0 items-center gap-1">
           <button
             onClick={onCopyPrompt}
             title="Copy prompt"
-            className="rounded p-1 text-muted-foreground hover:bg-amber-200 hover:text-amber-800 dark:hover:bg-amber-800 dark:hover:text-amber-200"
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <Copy className="h-3.5 w-3.5" />
           </button>
           <button
             onClick={onEdit}
             title="Edit"
-            className="rounded p-1 text-muted-foreground hover:bg-amber-200 hover:text-amber-800 dark:hover:bg-amber-800 dark:hover:text-amber-200"
+            className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <Pencil className="h-3.5 w-3.5" />
           </button>
@@ -71,6 +72,16 @@ export function InlineComment({
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
+      </div>
+      {/* Quoted content preview */}
+      {quotedContent && (
+        <div className="border-b border-border bg-muted/30 px-3 py-2">
+          <pre className="whitespace-pre-wrap text-xs font-mono text-muted-foreground">{quotedContent}</pre>
+        </div>
+      )}
+      {/* Comment body */}
+      <div className="px-3 py-2">
+        <p className="whitespace-pre-wrap text-sm text-foreground">{comment.body}</p>
       </div>
     </div>
   );
