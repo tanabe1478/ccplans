@@ -43,7 +43,6 @@ e2e/fixtures/plans/.backups/
 e2e/fixtures/plans/.history/
 e2e/fixtures/plans/.audit.jsonl
 e2e/fixtures/plans/.notifications-read.json
-e2e/fixtures/plans/.settings.json
 e2e/fixtures/plans/.views.json
 
 # Claude Code local settings
