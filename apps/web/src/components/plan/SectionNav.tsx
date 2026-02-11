@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
 import { List } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface SectionNavProps {
   content: string;

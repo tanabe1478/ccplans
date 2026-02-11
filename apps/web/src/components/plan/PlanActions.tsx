@@ -1,19 +1,11 @@
+import type { ExportFormat, ExternalApp } from '@ccplans/shared';
+import { Code, Download, Edit3, ExternalLink, MoreVertical, Terminal, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import {
-  Code,
-  Terminal,
-  ExternalLink,
-  Download,
-  Trash2,
-  Edit3,
-  MoreVertical,
-} from 'lucide-react';
+import { DeleteConfirmDialog } from '@/components/plan/DeleteConfirmDialog';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
-import { DeleteConfirmDialog } from '@/components/plan/DeleteConfirmDialog';
-import { useDeletePlan, useRenamePlan, useOpenPlan, useExportPlan } from '@/lib/hooks/usePlans';
+import { useDeletePlan, useExportPlan, useOpenPlan, useRenamePlan } from '@/lib/hooks/usePlans';
 import { useUiStore } from '@/stores/uiStore';
-import type { ExternalApp, ExportFormat } from '@ccplans/shared';
 
 interface PlanActionsProps {
   filename: string;
@@ -125,11 +117,7 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
 
         {/* More actions menu */}
         <div className="relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowMenu(!showMenu)}
-          >
+          <Button variant="ghost" size="icon" onClick={() => setShowMenu(!showMenu)}>
             <MoreVertical className="h-4 w-4" />
           </Button>
 
@@ -207,6 +195,7 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
 
       {/* Click outside to close menu */}
       {showMenu && (
+        // biome-ignore lint/a11y/noStaticElementInteractions: click-away backdrop overlay
         <div
           role="presentation"
           className="fixed inset-0 z-0"
@@ -236,13 +225,11 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
       />
 
       {/* Rename dialog */}
-      <Dialog
-        open={showRenameDialog}
-        onClose={() => setShowRenameDialog(false)}
-        title="Rename"
-      >
+      <Dialog open={showRenameDialog} onClose={() => setShowRenameDialog(false)} title="Rename">
         <div className="mb-4">
-          <label htmlFor="rename-filename-input" className="block text-sm font-medium mb-1">New filename</label>
+          <label htmlFor="rename-filename-input" className="block text-sm font-medium mb-1">
+            New filename
+          </label>
           <input
             id="rename-filename-input"
             type="text"
@@ -256,10 +243,7 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
           <Button variant="outline" onClick={() => setShowRenameDialog(false)}>
             Cancel
           </Button>
-          <Button
-            onClick={handleRename}
-            disabled={renamePlan.isPending}
-          >
+          <Button onClick={handleRename} disabled={renamePlan.isPending}>
             {renamePlan.isPending ? 'Renaming...' : 'Rename'}
           </Button>
         </div>

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { validateFrontmatter, autoCorrectFrontmatter } from '../services/validationService.js';
+import { describe, expect, it } from 'vitest';
+import { autoCorrectFrontmatter, validateFrontmatter } from '../services/validationService.js';
 
 describe('validateFrontmatter', () => {
   describe('valid frontmatter', () => {
@@ -61,7 +61,13 @@ describe('validateFrontmatter', () => {
       const result = validateFrontmatter({
         subtasks: [
           { id: 'st-1', title: 'Setup', status: 'done' },
-          { id: 'st-2', title: 'Implement', status: 'todo', assignee: 'bob', dueDate: '2025-06-01' },
+          {
+            id: 'st-2',
+            title: 'Implement',
+            status: 'todo',
+            assignee: 'bob',
+            dueDate: '2025-06-01',
+          },
         ],
       });
       expect(result.valid).toBe(true);
@@ -183,7 +189,7 @@ describe('autoCorrectFrontmatter', () => {
     const corrected = autoCorrectFrontmatter({ dueDate: 'not-a-date' });
     expect(corrected.dueDate).toBeDefined();
     // Should be a valid ISO date string
-    expect(new Date(corrected.dueDate!).getTime()).not.toBeNaN();
+    expect(new Date(corrected.dueDate as string).getTime()).not.toBeNaN();
   });
 
   it('should preserve valid dueDate', () => {
@@ -249,7 +255,7 @@ describe('autoCorrectFrontmatter', () => {
   it('should correct invalid archivedAt to current date', () => {
     const corrected = autoCorrectFrontmatter({ archivedAt: 'xyz' });
     expect(corrected.archivedAt).toBeDefined();
-    expect(new Date(corrected.archivedAt!).getTime()).not.toBeNaN();
+    expect(new Date(corrected.archivedAt as string).getTime()).not.toBeNaN();
   });
 
   it('should parse schemaVersion from numeric-like values', () => {

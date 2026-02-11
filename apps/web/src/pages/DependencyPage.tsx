@@ -1,8 +1,8 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
-import { useFrontmatterEnabled, useSettingsLoading } from '@/contexts/SettingsContext';
-import { AlertTriangle, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import type { DependencyGraph, DependencyNode, PlanStatus } from '@ccplans/shared';
+import { AlertTriangle, Maximize2, ZoomIn, ZoomOut } from 'lucide-react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { useFrontmatterEnabled, useSettingsLoading } from '@/contexts/SettingsContext';
 import { useDependencyGraph } from '@/lib/hooks/useDependencies';
 
 const NODE_WIDTH = 200;
@@ -125,9 +125,15 @@ function GraphNode({
   const colors = statusColors[node.status] ?? statusColors.todo;
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: SVG <g> cannot be replaced with <button>
     <g
+      role="button"
+      tabIndex={0}
       transform={`translate(${position.x}, ${position.y})`}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') onClick();
+      }}
       style={{ cursor: 'pointer' }}
     >
       <rect
@@ -146,26 +152,12 @@ function GraphNode({
         fontSize={13}
         fontWeight="bold"
       >
-        {node.title.length > 22 ? node.title.slice(0, 20) + '...' : node.title}
+        {node.title.length > 22 ? `${node.title.slice(0, 20)}...` : node.title}
       </text>
-      <text
-        x={NODE_WIDTH / 2}
-        y={48}
-        textAnchor="middle"
-        fill="#6b7280"
-        fontSize={10}
-      >
-        {node.filename.length > 28
-          ? node.filename.slice(0, 26) + '...'
-          : node.filename}
+      <text x={NODE_WIDTH / 2} y={48} textAnchor="middle" fill="#6b7280" fontSize={10}>
+        {node.filename.length > 28 ? `${node.filename.slice(0, 26)}...` : node.filename}
       </text>
-      <text
-        x={NODE_WIDTH / 2}
-        y={66}
-        textAnchor="middle"
-        fill={colors.text}
-        fontSize={11}
-      >
+      <text x={NODE_WIDTH / 2} y={66} textAnchor="middle" fill={colors.text} fontSize={11}>
         {node.status.replace('_', ' ')}
       </text>
     </g>
@@ -195,9 +187,7 @@ function GraphEdge({
       fill="none"
       stroke={isOnCriticalPath ? '#ef4444' : '#9ca3af'}
       strokeWidth={isOnCriticalPath ? 2.5 : 1.5}
-      markerEnd={
-        isOnCriticalPath ? 'url(#arrowhead-critical)' : 'url(#arrowhead)'
-      }
+      markerEnd={isOnCriticalPath ? 'url(#arrowhead-critical)' : 'url(#arrowhead)'}
     />
   );
 }
@@ -217,10 +207,7 @@ export function DependencyPage() {
     [graph]
   );
 
-  const criticalPathSet = useMemo(
-    () => new Set(graph?.criticalPath ?? []),
-    [graph]
-  );
+  const criticalPathSet = useMemo(() => new Set(graph?.criticalPath ?? []), [graph]);
 
   const svgSize = useMemo(() => {
     let maxX = 0;
@@ -239,15 +226,12 @@ export function DependencyPage() {
     setTranslate({ x: 0, y: 0 });
   };
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (e.button === 0) {
-        setIsPanning(true);
-        lastMousePos.current = { x: e.clientX, y: e.clientY };
-      }
-    },
-    []
-  );
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button === 0) {
+      setIsPanning(true);
+      lastMousePos.current = { x: e.clientX, y: e.clientY };
+    }
+  }, []);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
@@ -277,31 +261,27 @@ export function DependencyPage() {
 
   if (error) {
     return (
-      <div className="text-center py-12 text-destructive">
-        Failed to load dependency graph
-      </div>
+      <div className="text-center py-12 text-destructive">Failed to load dependency graph</div>
     );
   }
 
   if (!graph || graph.nodes.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        No dependency relationships found. Add <code>blockedBy</code> to plan
-        frontmatter to create dependencies.
+        No dependency relationships found. Add <code>blockedBy</code> to plan frontmatter to create
+        dependencies.
       </div>
     );
   }
 
   // Filter to only show nodes that participate in dependencies
-  const relevantNodes = graph.nodes.filter(
-    (n) => n.blockedBy.length > 0 || n.blocks.length > 0
-  );
+  const relevantNodes = graph.nodes.filter((n) => n.blockedBy.length > 0 || n.blocks.length > 0);
 
   if (relevantNodes.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        No dependency relationships found. Add <code>blockedBy</code> to plan
-        frontmatter to create dependencies.
+        No dependency relationships found. Add <code>blockedBy</code> to plan frontmatter to create
+        dependencies.
       </div>
     );
   }
@@ -423,16 +403,13 @@ export function DependencyPage() {
               <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
             </marker>
           </defs>
-          <g
-            transform={`translate(${translate.x}, ${translate.y}) scale(${scale})`}
-          >
+          <g transform={`translate(${translate.x}, ${translate.y}) scale(${scale})`}>
             {/* Edges */}
             {graph.edges.map((edge) => {
               const fromPos = positions.get(edge.from);
               const toPos = positions.get(edge.to);
               if (!fromPos || !toPos) return null;
-              const isOnCritical =
-                criticalPathSet.has(edge.from) && criticalPathSet.has(edge.to);
+              const isOnCritical = criticalPathSet.has(edge.from) && criticalPathSet.has(edge.to);
               return (
                 <GraphEdge
                   key={`${edge.from}-${edge.to}`}
@@ -455,11 +432,7 @@ export function DependencyPage() {
                   node={node}
                   position={pos}
                   isOnCriticalPath={criticalPathSet.has(node.filename)}
-                  onClick={() =>
-                    navigate(
-                      `/plan/${encodeURIComponent(node.filename)}`
-                    )
-                  }
+                  onClick={() => navigate(`/plan/${encodeURIComponent(node.filename)}`)}
                 />
               );
             })}

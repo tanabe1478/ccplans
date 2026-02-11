@@ -1,18 +1,38 @@
+import type { BulkExportFormat, PlanStatus } from '@ccplans/shared';
+import { Archive, Download, FileJson, FileSpreadsheet } from 'lucide-react';
 import { useState } from 'react';
-import { Download, FileJson, FileSpreadsheet, Archive } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
 import { useExportUrl } from '@/lib/hooks/useImportExport';
-import type { BulkExportFormat, PlanStatus } from '@ccplans/shared';
 
 interface ExportDialogProps {
   open: boolean;
   onClose: () => void;
 }
 
-const formatOptions: { value: BulkExportFormat; label: string; description: string; icon: typeof FileJson }[] = [
-  { value: 'json', label: 'JSON', description: 'Full export with content and metadata', icon: FileJson },
-  { value: 'csv', label: 'CSV', description: 'Metadata only (spreadsheet compatible)', icon: FileSpreadsheet },
-  { value: 'zip', label: 'Archive (tar.gz)', description: 'All markdown files compressed', icon: Archive },
+const formatOptions: {
+  value: BulkExportFormat;
+  label: string;
+  description: string;
+  icon: typeof FileJson;
+}[] = [
+  {
+    value: 'json',
+    label: 'JSON',
+    description: 'Full export with content and metadata',
+    icon: FileJson,
+  },
+  {
+    value: 'csv',
+    label: 'CSV',
+    description: 'Metadata only (spreadsheet compatible)',
+    icon: FileSpreadsheet,
+  },
+  {
+    value: 'zip',
+    label: 'Archive (tar.gz)',
+    description: 'All markdown files compressed',
+    icon: Archive,
+  },
 ];
 
 const statusOptions: { value: PlanStatus | ''; label: string }[] = [
@@ -75,7 +95,9 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
         </div>
 
         <div>
-          <label htmlFor="export-status-filter" className="block text-sm font-medium mb-1">Filter by status</label>
+          <label htmlFor="export-status-filter" className="block text-sm font-medium mb-1">
+            Filter by status
+          </label>
           <select
             id="export-status-filter"
             value={filterStatus}
