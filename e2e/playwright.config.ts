@@ -1,6 +1,6 @@
-import { defineConfig, devices } from '@playwright/test';
-import { resolve, dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { defineConfig, devices } from '@playwright/test';
 import { getApiPort, getWebPort } from './lib/ports.js';
 
 // Use fixtures directory for tests

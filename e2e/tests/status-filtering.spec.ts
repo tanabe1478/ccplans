@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { API_BASE_URL } from '../lib/test-helpers';
 
 // Fixture files:
@@ -109,7 +109,9 @@ test.describe('Status Filtering and Status Update', () => {
     await expect(page.getByRole('heading', { name: 'プラン一覧' })).toBeVisible();
 
     // Find a specific plan card and click its status badge
-    const planCard = page.locator('[class*="rounded-lg"][class*="border"]').filter({ hasText: 'green-dancing-cat.md' });
+    const planCard = page
+      .locator('[class*="rounded-lg"][class*="border"]')
+      .filter({ hasText: 'green-dancing-cat.md' });
     await expect(planCard).toBeVisible();
     const statusBadge = planCard.getByRole('button', { name: 'In Progress' });
     await expect(statusBadge).toBeVisible();
@@ -125,7 +127,9 @@ test.describe('Status Filtering and Status Update', () => {
     await expect(page.getByRole('heading', { name: 'プラン一覧' })).toBeVisible();
 
     // Find a specific plan card (in_progress -> review is a valid transition)
-    const planCard = page.locator('[class*="rounded-lg"][class*="border"]').filter({ hasText: 'green-dancing-cat.md' });
+    const planCard = page
+      .locator('[class*="rounded-lg"][class*="border"]')
+      .filter({ hasText: 'green-dancing-cat.md' });
     await expect(planCard).toBeVisible();
     const statusBadge = planCard.getByRole('button', { name: 'In Progress' });
     await expect(statusBadge).toBeVisible({ timeout: 5000 });
@@ -138,7 +142,9 @@ test.describe('Status Filtering and Status Update', () => {
     // For in_progress, valid transitions are ToDo and Review
     const reviewOption = dropdown.getByText('Review');
     await Promise.all([
-      page.waitForResponse((resp) => resp.url().includes('/status') && resp.request().method() === 'PATCH'),
+      page.waitForResponse(
+        (resp) => resp.url().includes('/status') && resp.request().method() === 'PATCH'
+      ),
       reviewOption.click(),
     ]);
 
@@ -231,8 +237,6 @@ test.describe('Search/Filter functionality', () => {
     await page.waitForTimeout(300);
 
     // Should show matching plans (blue-running-fox.md has "Authentication" in title)
-    await expect(
-      page.getByRole('heading', { name: /Authentication/i, level: 3 })
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Authentication/i, level: 3 })).toBeVisible();
   });
 });
