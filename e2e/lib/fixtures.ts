@@ -27,14 +27,15 @@ type WorkerFixtures = {
 async function waitForServer(url: string, stderr: () => string, timeoutMs = 30_000): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 2000);
     try {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 2000);
       const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(id);
       if (res.ok) return;
     } catch {
       // Server not ready yet
+    } finally {
+      clearTimeout(id);
     }
     await new Promise((r) => setTimeout(r, 250));
   }

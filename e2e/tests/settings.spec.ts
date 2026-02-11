@@ -3,6 +3,15 @@ import { expect, test } from '../lib/fixtures';
 test.describe.configure({ mode: 'serial' });
 
 test.describe('Settings - Frontmatter opt-out', () => {
+  test.afterEach(async ({ request, apiBaseUrl }) => {
+    // Restore frontmatter enabled to prevent state bleed within the worker
+    await request
+      .put(`${apiBaseUrl}/api/settings`, {
+        data: { frontmatterEnabled: true },
+      })
+      .catch(() => {});
+  });
+
   test('GET /api/settings returns current settings', async ({ request, apiBaseUrl }) => {
     const response = await request.get(`${apiBaseUrl}/api/settings`);
     expect(response.ok()).toBe(true);
@@ -38,10 +47,12 @@ test.describe('Settings - Frontmatter opt-out', () => {
   });
 
   test('plans API returns frontmatter when enabled', async ({ request, apiBaseUrl }) => {
-    await request.put(`${apiBaseUrl}/api/settings`, {
+    const enableResponse = await request.put(`${apiBaseUrl}/api/settings`, {
       data: { frontmatterEnabled: true },
     });
+    expect(enableResponse.ok()).toBe(true);
     const response = await request.get(`${apiBaseUrl}/api/plans`);
+    expect(response.ok()).toBe(true);
     const data = await response.json();
     const plansWithFm = data.plans.filter(
       (p: { frontmatter?: unknown }) => p.frontmatter !== undefined
