@@ -55,8 +55,6 @@ export interface PlanFrontmatter {
   blockedBy?: string[];
   /** Assigned person or agent */
   assignee?: string;
-  /** Archive timestamp (ISO 8601) */
-  archivedAt?: string;
   /** Subtasks */
   subtasks?: Subtask[];
   /** Schema version for migration */
@@ -174,7 +172,7 @@ export type BulkExportFormat = 'json' | 'csv' | 'zip';
  */
 export interface ExportOptions {
   format: BulkExportFormat;
-  includeArchived?: boolean;
+
   filterStatus?: PlanStatus;
   filterTags?: string[];
 }
@@ -237,18 +235,6 @@ export interface DiffResult {
   newVersion: string;
   lines: DiffLine[];
   stats: { added: number; removed: number; unchanged: number };
-}
-
-/**
- * Archived plan metadata
- */
-export interface ArchivedPlan {
-  filename: string;
-  originalPath: string;
-  archivedAt: string;
-  expiresAt: string;
-  title: string;
-  preview: string;
 }
 
 /**
@@ -322,30 +308,4 @@ export interface PlanDependencies {
   blockedBy: DependencyNode[];
   blocks: DependencyNode[];
   chain: string[];
-}
-
-/**
- * Saved view filter configuration
- */
-export interface SavedViewFilters {
-  status?: PlanStatus | 'all';
-  priority?: PlanPriority;
-  tags?: string[];
-  assignee?: string;
-  dueBefore?: string;
-  dueAfter?: string;
-  searchQuery?: string;
-}
-
-/**
- * A saved view (preset or user-created)
- */
-export interface SavedView {
-  id: string;
-  name: string;
-  filters: SavedViewFilters;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-  createdAt: string;
-  isPreset?: boolean;
 }

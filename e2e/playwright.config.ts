@@ -19,6 +19,8 @@ export default defineConfig({
       testIgnore: /settings\.spec\.ts/,
     },
     {
+      // Settings tests toggle frontmatterEnabled which affects other tests,
+      // so they run after all other tests complete.
       name: 'settings',
       use: { ...devices['Desktop Chrome'] },
       testMatch: /settings\.spec\.ts/,
