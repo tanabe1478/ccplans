@@ -62,7 +62,7 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
     <Dialog open={open} onClose={onClose} title="Export Plans">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">Format</label>
+          <span className="block text-sm font-medium mb-2">Format</span>
           <div className="space-y-2">
             {formatOptions.map((opt) => {
               const Icon = opt.icon;
@@ -95,8 +95,11 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Filter by status</label>
+          <label htmlFor="export-status-filter" className="block text-sm font-medium mb-1">
+            Filter by status
+          </label>
           <select
+            id="export-status-filter"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as PlanStatus | '')}
             className="w-full rounded-md border bg-background px-3 py-2 text-sm"
@@ -120,10 +123,15 @@ export function ExportDialog({ open, onClose }: ExportDialogProps) {
         </label>
 
         <div className="flex justify-end gap-2 pt-2">
-          <button onClick={onClose} className="px-4 py-2 text-sm rounded-md border hover:bg-accent">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm rounded-md border hover:bg-accent"
+          >
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
           >

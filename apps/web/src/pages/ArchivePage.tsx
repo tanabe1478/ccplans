@@ -163,8 +163,11 @@ export function ArchivePage() {
           </div>
           <p className="text-sm font-mono bg-muted p-2 rounded">{deleteTarget}</p>
           <div>
-            <label className="block text-sm font-medium mb-1">Type the filename to confirm:</label>
+            <label htmlFor="archive-delete-confirm" className="block text-sm font-medium mb-1">
+              Type the filename to confirm:
+            </label>
             <input
+              id="archive-delete-confirm"
               type="text"
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}

@@ -29,7 +29,9 @@ function KanbanCard({ plan, onDragStart }: KanbanCardProps) {
   const deadlineColor = getDeadlineColor(dueDate);
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: draggable div cannot be <li> without parent <ul>
     <div
+      role="listitem"
       draggable
       onDragStart={(e) => onDragStart(e, plan)}
       className={cn(
@@ -87,7 +89,9 @@ function KanbanColumn({
   const isDragOver = dragOverStatus === status;
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: kanban column layout requires div
     <div
+      role="group"
       className={cn(
         'flex-shrink-0 w-72 flex flex-col rounded-lg border bg-muted/30 transition-colors',
         isDragOver && canDrop && 'border-primary bg-primary/5',
@@ -106,7 +110,8 @@ function KanbanColumn({
           {plans.length}
         </span>
       </div>
-      <div className="p-2 flex-1 overflow-y-auto space-y-2 min-h-[200px]">
+      {/* biome-ignore lint/a11y/useSemanticElements: kanban column cards container uses role="list" for ARIA semantics */}
+      <div role="list" className="p-2 flex-1 overflow-y-auto space-y-2 min-h-[200px]">
         {plans.map((plan) => (
           <KanbanCard key={plan.filename} plan={plan} onDragStart={onDragStart} />
         ))}
@@ -121,13 +126,13 @@ function KanbanColumn({
 export function KanbanPage() {
   const frontmatterEnabled = useFrontmatterEnabled();
   const settingsLoading = useSettingsLoading();
-  if (settingsLoading) return null;
-  if (!frontmatterEnabled) return <Navigate to="/" replace />;
-
   const { data, isLoading, error } = usePlans();
   const updateStatus = useUpdateStatus();
   const [draggedPlan, setDraggedPlan] = useState<PlanMeta | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<PlanStatus | null>(null);
+
+  if (settingsLoading) return null;
+  if (!frontmatterEnabled) return <Navigate to="/" replace />;
 
   if (isLoading) {
     return (

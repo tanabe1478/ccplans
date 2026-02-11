@@ -1,6 +1,6 @@
 import type { ExportFormat, ExternalApp } from '@ccplans/shared';
 import { Code, Download, Edit3, ExternalLink, MoreVertical, Terminal, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DeleteConfirmDialog } from '@/components/plan/DeleteConfirmDialog';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
@@ -25,6 +25,18 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
   const openPlan = useOpenPlan();
   const { getExportUrl } = useExportPlan();
   const { addToast } = useUiStore();
+
+  useEffect(() => {
+    if (!showMenu) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowMenu(false);
+        setShowExportMenu(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showMenu]);
 
   const handleOpen = async (app: ExternalApp) => {
     try {
@@ -125,6 +137,7 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
             <div className="absolute right-0 top-full mt-1 w-48 rounded-md border bg-card shadow-lg z-10">
               <div className="py-1">
                 <button
+                  type="button"
                   className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-accent"
                   onClick={() => {
                     setShowRenameDialog(true);
@@ -137,6 +150,7 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
 
                 <div className="relative">
                   <button
+                    type="button"
                     className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-accent"
                     onClick={() => setShowExportMenu(!showExportMenu)}
                   >
@@ -147,18 +161,21 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
                   {showExportMenu && (
                     <div className="absolute left-full top-0 w-32 rounded-md border bg-card shadow-lg">
                       <button
+                        type="button"
                         className="flex w-full px-4 py-2 text-sm hover:bg-accent"
                         onClick={() => handleExport('md')}
                       >
                         Markdown
                       </button>
                       <button
+                        type="button"
                         className="flex w-full px-4 py-2 text-sm hover:bg-accent"
                         onClick={() => handleExport('html')}
                       >
                         HTML
                       </button>
                       <button
+                        type="button"
                         className="flex w-full px-4 py-2 text-sm hover:bg-accent text-muted-foreground"
                         onClick={() => handleExport('pdf')}
                         disabled
@@ -172,6 +189,7 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
                 <hr className="my-1" />
 
                 <button
+                  type="button"
                   className="flex w-full items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-destructive/10"
                   onClick={() => {
                     setShowDeleteDialog(true);
@@ -189,7 +207,9 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
 
       {/* Click outside to close menu */}
       {showMenu && (
+        // biome-ignore lint/a11y/noStaticElementInteractions: click-away backdrop overlay
         <div
+          role="presentation"
           className="fixed inset-0 z-0"
           onClick={() => {
             setShowMenu(false);
@@ -213,8 +233,11 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
       {/* Rename dialog */}
       <Dialog open={showRenameDialog} onClose={() => setShowRenameDialog(false)} title="Rename">
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">New filename</label>
+          <label htmlFor="rename-filename-input" className="block text-sm font-medium mb-1">
+            New filename
+          </label>
           <input
+            id="rename-filename-input"
             type="text"
             value={newFilename}
             onChange={(e) => setNewFilename(e.target.value)}

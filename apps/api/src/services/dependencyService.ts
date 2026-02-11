@@ -168,7 +168,8 @@ export function findCriticalPath(nodes: DependencyNode[]): string[] {
   }
 
   while (queue.length > 0) {
-    const current = queue.shift()!;
+    const current = queue.shift();
+    if (!current) break;
     const currentDist = dist.get(current) ?? 0;
     const node = nodeMap.get(current);
     if (!node) continue;

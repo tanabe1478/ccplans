@@ -111,8 +111,11 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
               <div className="text-sm">
                 <div className="font-medium mb-1">Errors:</div>
                 <ul className="space-y-1">
-                  {result.errors.map((err, i) => (
-                    <li key={i} className="flex items-start gap-1 text-red-600 dark:text-red-400">
+                  {result.errors.map((err) => (
+                    <li
+                      key={`${err.filename}-${err.error}`}
+                      className="flex items-start gap-1 text-red-600 dark:text-red-400"
+                    >
                       <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                       <span>
                         {err.filename}: {err.error}
@@ -124,6 +127,7 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
             )}
             <div className="flex justify-end pt-2">
               <button
+                type="button"
                 onClick={handleClose}
                 className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
               >
@@ -133,7 +137,8 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
           </div>
         ) : (
           <>
-            <div
+            {/* biome-ignore lint/a11y/noStaticElementInteractions: drag-drop zone */}
+            <section
               className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                 dragOver ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
               }`}
@@ -149,6 +154,7 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
                 Drag and drop markdown files here
               </p>
               <button
+                type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="text-sm text-primary hover:underline"
               >
@@ -162,7 +168,7 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
                 onChange={handleFileSelect}
                 className="hidden"
               />
-            </div>
+            </section>
 
             {files.length > 0 && (
               <div>
@@ -183,6 +189,7 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
                         </span>
                       </div>
                       <button
+                        type="button"
                         onClick={() => removeFile(file.filename)}
                         className="p-1 hover:bg-accent rounded shrink-0"
                       >
@@ -196,12 +203,14 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
 
             <div className="flex justify-end gap-2 pt-2">
               <button
+                type="button"
                 onClick={handleClose}
                 className="px-4 py-2 text-sm rounded-md border hover:bg-accent"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleImport}
                 disabled={files.length === 0 || importMutation.isPending}
                 className="flex items-center gap-2 px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"

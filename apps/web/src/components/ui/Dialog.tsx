@@ -33,7 +33,15 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: backdrop overlay dismiss */}
+      <div
+        role="presentation"
+        className="absolute inset-0 bg-black/50"
+        onClick={onClose}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') onClose();
+        }}
+      />
       <div
         ref={dialogRef}
         className={cn(
@@ -43,7 +51,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">{title}</h2>
-          <button onClick={onClose} className="p-1 hover:bg-accent rounded">
+          <button type="button" onClick={onClose} className="p-1 hover:bg-accent rounded">
             <X className="h-5 w-5" />
           </button>
         </div>

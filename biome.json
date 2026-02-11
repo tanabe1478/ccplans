@@ -59,31 +59,31 @@
       "correctness": {
         "noUnusedImports": "warn",
         "noUnusedVariables": "warn",
-        "useHookAtTopLevel": "warn",
+        "useHookAtTopLevel": "error",
         "useExhaustiveDependencies": "warn",
-        "noInvalidUseBeforeDeclaration": "warn"
+        "noInvalidUseBeforeDeclaration": "error"
       },
       "suspicious": {
-        "noExplicitAny": "warn",
+        "noExplicitAny": "error",
         "noConsole": "warn",
         "noVar": "error",
-        "noArrayIndexKey": "warn",
+        "noArrayIndexKey": "error",
         "noUnknownAtRules": "off"
       },
       "style": {
         "useConst": "error",
         "useTemplate": "error",
-        "noNonNullAssertion": "warn"
+        "noNonNullAssertion": "error"
       },
       "complexity": {
         "noForEach": "off"
       },
       "a11y": {
         "noSvgWithoutTitle": "off",
-        "useButtonType": "warn",
-        "noStaticElementInteractions": "warn",
-        "useKeyWithClickEvents": "warn",
-        "noLabelWithoutControl": "warn",
+        "useButtonType": "error",
+        "noStaticElementInteractions": "error",
+        "useKeyWithClickEvents": "error",
+        "noLabelWithoutControl": "error",
         "noAutofocus": "warn"
       },
       "security": {

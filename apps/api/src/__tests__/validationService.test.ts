@@ -189,7 +189,7 @@ describe('autoCorrectFrontmatter', () => {
     const corrected = autoCorrectFrontmatter({ dueDate: 'not-a-date' });
     expect(corrected.dueDate).toBeDefined();
     // Should be a valid ISO date string
-    expect(new Date(corrected.dueDate!).getTime()).not.toBeNaN();
+    expect(new Date(corrected.dueDate as string).getTime()).not.toBeNaN();
   });
 
   it('should preserve valid dueDate', () => {
@@ -255,7 +255,7 @@ describe('autoCorrectFrontmatter', () => {
   it('should correct invalid archivedAt to current date', () => {
     const corrected = autoCorrectFrontmatter({ archivedAt: 'xyz' });
     expect(corrected.archivedAt).toBeDefined();
-    expect(new Date(corrected.archivedAt!).getTime()).not.toBeNaN();
+    expect(new Date(corrected.archivedAt as string).getTime()).not.toBeNaN();
   });
 
   it('should parse schemaVersion from numeric-like values', () => {
