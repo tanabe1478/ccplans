@@ -157,7 +157,10 @@ export function PlanCard({ plan, showCheckbox = false }: PlanCardProps) {
       onKeyDown={
         showCheckbox
           ? (e) => {
-              if (e.key === 'Enter' || e.key === ' ') toggleSelect(plan.filename);
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleSelect(plan.filename);
+              }
             }
           : undefined
       }

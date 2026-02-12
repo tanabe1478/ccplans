@@ -47,7 +47,10 @@ export function StatusBadge({ status, onClick, interactive = false }: StatusBadg
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') onClick();
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick();
+          }
         }}
       >
         {config.label}

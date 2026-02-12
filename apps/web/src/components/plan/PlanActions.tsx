@@ -119,7 +119,7 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
         {/* More actions menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="More actions">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

@@ -166,7 +166,7 @@ test.describe('Bulk delete functionality', () => {
     await page.getByRole('button', { name: '選択', exact: true }).click();
 
     // Wait for checkboxes to appear (Radix Checkbox renders as button[role="checkbox"])
-    await expect(page.locator('button[role="checkbox"]').first()).toBeVisible({ timeout: 3000 });
+    await expect(page.locator('button[role="checkbox"]').first()).toBeVisible();
 
     // Select both test plans by clicking their checkboxes
     for (const filename of BULK_TEST_FILES) {

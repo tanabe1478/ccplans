@@ -86,7 +86,8 @@ export function HomePage() {
       setShowBulkDeleteDialog(false);
       setSelectionMode(false);
     } catch (err) {
-      toast.error(`削除に失敗しました: ${err}`);
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(`削除に失敗しました: ${message}`);
     }
   };
 

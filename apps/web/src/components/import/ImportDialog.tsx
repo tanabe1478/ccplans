@@ -86,7 +86,12 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && handleClose()}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v && !importMutation.isPending) handleClose();
+      }}
+    >
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Import Plans</DialogTitle>
@@ -197,6 +202,7 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
                           type="button"
                           onClick={() => removeFile(file.filename)}
                           className="p-1 hover:bg-accent rounded shrink-0"
+                          aria-label={`Remove ${file.filename}`}
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -207,7 +213,7 @@ export function ImportDialog({ open, onClose }: ImportDialogProps) {
               )}
 
               <DialogFooter>
-                <Button variant="outline" onClick={handleClose}>
+                <Button variant="outline" onClick={handleClose} disabled={importMutation.isPending}>
                   Cancel
                 </Button>
                 <Button
