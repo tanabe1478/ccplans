@@ -318,7 +318,6 @@ This plan has no schemaVersion.
             filename,
             content: `---
 status: todo
-priority: low
 ---
 # ${filename}
 
