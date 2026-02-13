@@ -1,0 +1,478 @@
+import { normalizePlanStatus, type PlanMeta, type PlanStatus } from '@ccplans/shared';
+import {
+  AlertCircle,
+  CheckSquare,
+  Clock3,
+  Eye,
+  FileText,
+  Loader2,
+  MessageSquareText,
+  Search,
+  Trash2,
+  XSquare,
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PlanContextMenu } from '@/components/plan/PlanContextMenu';
+import { ProjectBadge } from '@/components/plan/ProjectBadge';
+import { StatusDropdown } from '@/components/plan/StatusDropdown';
+import { Button } from '@/components/ui/Button';
+import { Dialog } from '@/components/ui/Dialog';
+import { useFrontmatterEnabled, useSettingsLoading } from '@/contexts/SettingsContext';
+import { writeClipboard } from '@/lib/clipboard';
+import { useBulkDelete, usePlans, useUpdateStatus } from '@/lib/hooks/usePlans';
+import { cn, formatDate, formatRelativeDeadline, getDeadlineColor } from '@/lib/utils';
+import { useUiStore } from '@/stores/uiStore';
+
+const statusTabs: Array<{ key: PlanStatus | 'all'; label: string }> = [
+  { key: 'all', label: 'All' },
+  { key: 'todo', label: 'Todo' },
+  { key: 'in_progress', label: 'In Progress' },
+  { key: 'review', label: 'Review' },
+  { key: 'completed', label: 'Completed' },
+];
+
+export function HomePage() {
+  const navigate = useNavigate();
+  const { data, isLoading, error } = usePlans();
+  const bulkDelete = useBulkDelete();
+  const updateStatus = useUpdateStatus();
+  const { addToast } = useUiStore();
+  const fmEnabled = useFrontmatterEnabled();
+  const settingsLoading = useSettingsLoading();
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<PlanStatus | 'all'>('all');
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedPlans, setSelectedPlans] = useState<Set<string>>(new Set());
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [activeFilename, setActiveFilename] = useState<string | null>(null);
+  const [contextPlan, setContextPlan] = useState<PlanMeta | null>(null);
+  const [contextPos, setContextPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [deleteTarget, setDeleteTarget] = useState<PlanMeta | null>(null);
+  const plans = data || [];
+
+  const filteredPlans = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    return plans
+      .filter((plan) => {
+        if (
+          fmEnabled &&
+          statusFilter !== 'all' &&
+          normalizePlanStatus(plan.frontmatter?.status) !== statusFilter
+        ) {
+          return false;
+        }
+        if (!normalizedQuery) return true;
+        const keywords = [plan.title, plan.filename, plan.preview, ...(plan.sections ?? [])]
+          .join(' ')
+          .toLowerCase();
+        return keywords.includes(normalizedQuery);
+      })
+      .sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime());
+  }, [fmEnabled, plans, query, statusFilter]);
+
+  const activePlan = useMemo(() => {
+    const source = filteredPlans.length > 0 ? filteredPlans : plans;
+    if (source.length === 0) return null;
+    if (!activeFilename) return source[0];
+    return source.find((plan) => plan.filename === activeFilename) ?? source[0];
+  }, [activeFilename, filteredPlans, plans]);
+
+  useEffect(() => {
+    if (!activePlan) {
+      setActiveFilename(null);
+      return;
+    }
+    setActiveFilename(activePlan.filename);
+  }, [activePlan]);
+
+  useEffect(() => {
+    if (!fmEnabled && statusFilter !== 'all') {
+      setStatusFilter('all');
+    }
+  }, [fmEnabled, statusFilter]);
+
+  const toggleSelection = (filename: string) => {
+    setSelectedPlans((prev) => {
+      const next = new Set(prev);
+      if (next.has(filename)) {
+        next.delete(filename);
+      } else {
+        next.add(filename);
+      }
+      return next;
+    });
+  };
+
+  if (settingsLoading || isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-rose-400">
+        <AlertCircle className="h-8 w-8 mb-2" />
+        <p className="text-[13px]">Failed to load plans</p>
+        <p className="text-[12px] text-slate-500">{String(error)}</p>
+      </div>
+    );
+  }
+
+  const handleBulkDelete = async () => {
+    try {
+      await bulkDelete.mutateAsync({ filenames: Array.from(selectedPlans) });
+      addToast(`Deleted ${selectedPlans.size} plan(s)`, 'success');
+      setSelectedPlans(new Set());
+      setShowBulkDeleteDialog(false);
+      setSelectionMode(false);
+    } catch (err) {
+      addToast(`Delete failed: ${err}`, 'error');
+    }
+  };
+
+  const handleCopyFilename = async () => {
+    if (!contextPlan) return;
+    try {
+      await writeClipboard(contextPlan.filename);
+      addToast('Filename copied', 'success');
+    } catch {
+      addToast('Failed to copy filename', 'error');
+    }
+  };
+
+  const hasSelection = selectedPlans.size > 0;
+
+  return (
+    <div className="space-y-3">
+      <section className="border border-slate-800 bg-slate-900/50 p-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-[16px] font-semibold tracking-tight text-slate-100">Plans</h1>
+          <span className="text-[11px] text-slate-500">{plans.length} indexed</span>
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant={selectionMode ? 'secondary' : 'outline'}
+              size="sm"
+              onClick={() => {
+                setSelectionMode((v) => !v);
+                if (selectionMode) setSelectedPlans(new Set());
+              }}
+            >
+              <CheckSquare className="mr-1 h-4 w-4" />
+              Select
+            </Button>
+            {selectionMode ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setSelectedPlans(new Set(filteredPlans.map((plan) => plan.filename)))
+                  }
+                >
+                  All
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setSelectedPlans(new Set())}>
+                  <XSquare className="mr-1 h-4 w-4" />
+                  Clear
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={!hasSelection}
+                  onClick={() => setShowBulkDeleteDialog(true)}
+                >
+                  <Trash2 className="mr-1 h-4 w-4" />
+                  Delete ({selectedPlans.size})
+                </Button>
+              </>
+            ) : null}
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="relative min-w-[240px] flex-1">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search by title, filename, section..."
+              className="h-8 w-full border border-slate-700 bg-slate-950 pl-8 pr-3 text-[12px] text-slate-100 outline-none placeholder:text-slate-500"
+            />
+          </div>
+          {fmEnabled ? (
+            <div className="flex items-center gap-1 border border-slate-700 bg-slate-950 p-1">
+              {statusTabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setStatusFilter(tab.key)}
+                  className={cn(
+                    'px-2 py-1 text-[11px] tracking-wide',
+                    statusFilter === tab.key
+                      ? 'bg-slate-700 text-slate-100'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="border border-slate-800 bg-slate-900/50">
+          <div
+            className={cn(
+              'grid border-b border-slate-800 px-2 py-1.5 text-[10px] uppercase tracking-[0.08em] text-slate-500',
+              fmEnabled
+                ? 'grid-cols-[28px_minmax(0,1fr)_120px_170px_68px]'
+                : 'grid-cols-[28px_minmax(0,1fr)_170px_68px]'
+            )}
+          >
+            <span />
+            <span>Plan</span>
+            {fmEnabled ? <span>Status</span> : null}
+            <span>Modified</span>
+            <span />
+          </div>
+          <div className="max-h-[68vh] overflow-auto">
+            {filteredPlans.length === 0 ? (
+              <div className="px-3 py-10 text-center text-[12px] text-slate-500">
+                No plans found.
+              </div>
+            ) : (
+              filteredPlans.map((plan) => {
+                const isActive = plan.filename === activePlan?.filename;
+                const isChecked = selectedPlans.has(plan.filename);
+                const dueDate = fmEnabled ? plan.frontmatter?.dueDate : undefined;
+                const status = normalizePlanStatus(plan.frontmatter?.status);
+                return (
+                  // biome-ignore lint/a11y/noStaticElementInteractions: row supports native context menu
+                  <div
+                    key={plan.filename}
+                    data-plan-row={plan.filename}
+                    onContextMenu={(event) => {
+                      event.preventDefault();
+                      setContextPlan(plan);
+                      setContextPos({ x: event.clientX, y: event.clientY });
+                    }}
+                    className={cn(
+                      'grid items-center border-b border-slate-800 px-2 py-1.5 text-[12px] text-slate-300',
+                      fmEnabled
+                        ? 'grid-cols-[28px_minmax(0,1fr)_120px_170px_68px]'
+                        : 'grid-cols-[28px_minmax(0,1fr)_170px_68px]',
+                      isActive
+                        ? 'bg-slate-800/70'
+                        : 'hover:bg-slate-700/30 dark:hover:bg-slate-800/40'
+                    )}
+                  >
+                    <div className="flex items-center justify-center">
+                      {selectionMode ? (
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleSelection(plan.filename)}
+                          className="h-3.5 w-3.5 rounded-none border-slate-600 bg-slate-950"
+                        />
+                      ) : (
+                        <FileText className="h-3.5 w-3.5 text-slate-600" />
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="min-w-0 text-left"
+                      onClick={() => {
+                        if (selectionMode) {
+                          toggleSelection(plan.filename);
+                          return;
+                        }
+                        setActiveFilename(plan.filename);
+                      }}
+                      onDoubleClick={() => navigate(`/plan/${encodeURIComponent(plan.filename)}`)}
+                    >
+                      <p className="truncate text-[12px] font-medium">{plan.title}</p>
+                      <p className="truncate font-mono text-[10px] text-slate-500">
+                        {plan.filename}
+                      </p>
+                    </button>
+                    {fmEnabled ? (
+                      <div className="pr-2">
+                        <StatusDropdown
+                          currentStatus={status}
+                          disabled={updateStatus.isPending}
+                          onStatusChange={(next) =>
+                            updateStatus.mutate({ filename: plan.filename, status: next })
+                          }
+                        />
+                      </div>
+                    ) : null}
+                    <div className="text-[11px] text-slate-500">
+                      {formatDate(plan.modifiedAt)}
+                      {dueDate ? (
+                        <p
+                          className={cn(
+                            'mt-0.5 inline-flex items-center gap-1 text-[10px]',
+                            getDeadlineColor(dueDate).includes('red')
+                              ? 'text-rose-400'
+                              : getDeadlineColor(dueDate).includes('orange')
+                                ? 'text-orange-400'
+                                : 'text-amber-300'
+                          )}
+                        >
+                          <Clock3 className="h-3 w-3" />
+                          {formatRelativeDeadline(dueDate)}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/plan/${encodeURIComponent(plan.filename)}`)}
+                        className="border border-slate-700 p-1 text-slate-500 hover:bg-slate-700/50 hover:text-slate-200 dark:hover:bg-slate-800"
+                        title="Open detail"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(`/plan/${encodeURIComponent(plan.filename)}/review`)
+                        }
+                        className="border border-slate-700 p-1 text-slate-500 hover:bg-slate-700/50 hover:text-slate-200 dark:hover:bg-slate-800"
+                        title="Open review"
+                      >
+                        <MessageSquareText className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        <aside className="border border-slate-800 bg-slate-900/60 p-3">
+          {activePlan ? (
+            <div className="space-y-3">
+              <div className="space-y-1 border-b border-slate-800 pb-3">
+                <p className="text-[11px] uppercase tracking-[0.08em] text-slate-500">Preview</p>
+                <h2 className="text-[14px] font-semibold text-slate-100">{activePlan.title}</h2>
+                <p className="truncate font-mono text-[11px] text-slate-500">
+                  {activePlan.filename}
+                </p>
+              </div>
+              {fmEnabled && activePlan.frontmatter?.projectPath ? (
+                <ProjectBadge projectPath={activePlan.frontmatter.projectPath} />
+              ) : null}
+              <p className="line-clamp-8 break-all text-[12px] leading-5 text-slate-300">
+                {activePlan.preview}
+              </p>
+              {activePlan.sections.length > 0 ? (
+                <div className="space-y-1 border-t border-slate-800 pt-3">
+                  <p className="text-[11px] uppercase tracking-[0.08em] text-slate-500">Sections</p>
+                  <div className="flex flex-wrap gap-1">
+                    {activePlan.sections.slice(0, 8).map((section) => (
+                      <span
+                        key={section}
+                        className="max-w-full break-all border border-slate-700 bg-slate-950 px-1.5 py-0.5 text-[10px] text-slate-400"
+                      >
+                        {section}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <p className="text-[12px] text-slate-500">No plan selected.</p>
+          )}
+        </aside>
+      </section>
+
+      <Dialog
+        open={showBulkDeleteDialog}
+        onClose={() => setShowBulkDeleteDialog(false)}
+        title="Bulk Delete Plans"
+      >
+        <p className="mb-4 text-sm text-muted-foreground">
+          Permanently delete {selectedPlans.size} selected plan(s)? This action cannot be undone.
+        </p>
+        <div className="mb-4 max-h-40 overflow-y-auto">
+          {Array.from(selectedPlans).map((filename) => (
+            <p key={filename} className="font-mono text-sm text-muted-foreground">
+              {filename}
+            </p>
+          ))}
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => setShowBulkDeleteDialog(false)}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={handleBulkDelete} disabled={bulkDelete.isPending}>
+            {bulkDelete.isPending ? 'Deleting...' : 'Delete'}
+          </Button>
+        </div>
+      </Dialog>
+
+      {deleteTarget ? (
+        <Dialog open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Plan">
+          <p className="mb-3 text-sm text-muted-foreground">
+            Permanently delete{' '}
+            <span className="font-mono text-foreground">{deleteTarget.filename}</span>?
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                try {
+                  await bulkDelete.mutateAsync({ filenames: [deleteTarget.filename] });
+                  addToast('Deleted plan', 'success');
+                  setDeleteTarget(null);
+                } catch (err) {
+                  addToast(`Delete failed: ${err}`, 'error');
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        </Dialog>
+      ) : null}
+
+      <PlanContextMenu
+        open={!!contextPlan}
+        x={contextPos.x}
+        y={contextPos.y}
+        onClose={() => setContextPlan(null)}
+        onOpenDetail={() => {
+          if (!contextPlan) return;
+          navigate(`/plan/${encodeURIComponent(contextPlan.filename)}`);
+          setContextPlan(null);
+        }}
+        onOpenReview={() => {
+          if (!contextPlan) return;
+          navigate(`/plan/${encodeURIComponent(contextPlan.filename)}/review`);
+          setContextPlan(null);
+        }}
+        onCopyFilename={async () => {
+          await handleCopyFilename();
+          setContextPlan(null);
+        }}
+        onDelete={() => {
+          if (!contextPlan) return;
+          setDeleteTarget(contextPlan);
+          setContextPlan(null);
+        }}
+      />
+    </div>
+  );
+}

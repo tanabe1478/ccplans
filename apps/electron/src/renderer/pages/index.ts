@@ -1,0 +1,7 @@
+export { DependencyPage } from './DependencyPage';
+export { HomePage } from './HomePage';
+export { KanbanPage } from './KanbanPage';
+export { ReviewPage } from './ReviewPage';
+export { SearchPage } from './SearchPage';
+export { SettingsPage } from './SettingsPage';
+export { ViewPage } from './ViewPage';

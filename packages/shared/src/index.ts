@@ -2,12 +2,14 @@
 
 export type {
   ApiError,
+  ArchiveListResponse,
   BackupsListResponse,
   BulkDeleteRequest,
   BulkOperationResponse,
   BulkStatusRequest,
   CreateBackupResponse,
   CreatePlanRequest,
+  CreateViewRequest,
   DependencyGraphResponse,
   DiffResponse,
   ExportQuery,
@@ -30,8 +32,11 @@ export type {
   UpdateFrontmatterRequest,
   UpdatePlanRequest,
   UpdateStatusRequest,
+  UpdateViewRequest,
+  ViewsListResponse,
 } from './types/api.js';
 export type {
+  ArchivedPlan,
   AuditEntry,
   BackupInfo,
   BulkExportFormat,
@@ -54,14 +59,17 @@ export type {
   PlanDetail,
   PlanFrontmatter,
   PlanMeta,
+  PlanPriority,
   PlanStatus,
   PlanVersion,
+  SavedView,
+  SavedViewFilters,
   SearchMatch,
   SearchResult,
   Subtask,
   ViewMode,
 } from './types/plan.js';
-export { STATUS_TRANSITIONS } from './types/plan.js';
+export { isPlanStatus, normalizePlanStatus, STATUS_TRANSITIONS } from './types/plan.js';
 export type {
   AppSettings,
   GetSettingsResponse,

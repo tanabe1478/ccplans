@@ -1,101 +1,81 @@
 # AGENTS.md
 
-This file provides guidance to coding agents (e.g., Codex, Claude Code) when working with code in this repository.
+This file provides guidance to coding agents (e.g., Codex, Claude Code) working in this repository.
 
-## プロジェクト概要
+## Project
 
-Claude Plans Manager (ccplans) - `~/.claude/plans/` ディレクトリ内のプランファイル（Markdownファイル）を管理するWebベースのツール。pnpmワークスペースによるモノレポ構成。
+Claude Plans Manager (ccplans) is an **Electron-native** application for managing Markdown plan files in `~/.claude/plans/`.
 
-## コマンド
+- No standalone web app
+- No standalone API server
+- Electron main process directly reads/writes plan files
+
+## Commands
 
 ```bash
-# 開発サーバー起動（API + Web同時起動）
+# Start Electron app (dev)
 pnpm dev
 
-# 全パッケージのビルド
+# Build Electron app
 pnpm build
 
-# 全パッケージのテスト
+# Unit tests (shared + electron)
 pnpm test
 
-# E2Eテスト（Playwright）
+# Electron E2E tests (Playwright)
 pnpm test:e2e
 
-# 単一テストファイル実行
-pnpm --filter @ccplans/api test -- planService.test.ts
-
-# テスト（ウォッチモード）
-pnpm --filter @ccplans/api test:watch
-
-# 型チェック
-pnpm --filter @ccplans/api lint
-pnpm --filter @ccplans/web lint
+# Type check
+pnpm lint
 ```
 
-## アーキテクチャ
+Package-level commands:
 
-### パッケージ構成
-
+```bash
+pnpm --filter @ccplans/electron dev
+pnpm --filter @ccplans/electron test
+pnpm --filter @ccplans/electron test:e2e
+pnpm --filter @ccplans/shared test
 ```
+
+## Architecture
+
+```text
 apps/
-  api/     - Fastify REST API サーバー (port 3001)
-  web/     - React SPA (Vite, port 5173)
+  electron/
+    src/main      # File I/O services + IPC handlers
+    src/preload   # Context bridge (secure renderer API)
+    src/renderer  # React UI
+    e2e/          # Electron Playwright tests + seed fixtures
 packages/
-  shared/  - 共有型定義（PlanMeta, PlanDetail, API型など）
-e2e/       - Playwright E2Eテスト
-hooks/     - Claude Code用hookスクリプト
+  shared/         # Shared types
+hooks/            # Claude Code hooks
 ```
 
-### API (apps/api)
+### Main Process (`apps/electron/src/main`)
 
-- **エントリポイント**: `src/index.ts` - Fastifyサーバー設定
-- **ルート**: `/api/plans/*`, `/api/search`
-- **サービス層**:
-  - `PlanService`: プランファイルのCRUD操作（`~/.claude/plans/`を操作）
-    - `updateStatus()`: ステータス更新（frontmatterを書き換え）
-    - `parseFrontmatter()`: YAMLフロントマター解析
-  - `SearchService`: 全文検索
-  - `openerService`: 外部アプリ（VSCode, Terminal）での開く機能
-  - `nameGenerator`: `adjective-verb-noun.md`形式のファイル名生成
-- **ステータス更新API**: `PATCH /api/plans/:filename/status` でステータス変更
+- `index.ts`: BrowserWindow lifecycle
+- `ipc/`: renderer-facing IPC handlers
+- `services/planService.ts`: plan CRUD + frontmatter parsing
+- `services/searchService.ts`: full-text + structured search
+- `services/historyService.ts`: versions/diff/rollback
+- `services/dependencyService.ts`: dependency graph
 
-- **設定**: `src/config.ts` で環境変数設定（PLANS_DIR, PORT等）
-- **セキュリティ**: ファイル名バリデーションでパストラバーサル対策済み
+### Renderer (`apps/electron/src/renderer`)
 
-### Web (apps/web)
+- React + Zustand + TanStack Query
+- Main routes:
+  - `/` list
+  - `/plan/:filename` detail
+  - `/plan/:filename/review` review
+  - `/search`, `/kanban`, `/dependencies`, `/settings`
 
-- **状態管理**: Zustand（`stores/planStore.ts`, `stores/uiStore.ts`）
-  - `statusFilter`: ステータスでフィルター（todo, in_progress, completed, all）
-  - `projectFilter`: プロジェクトパスでフィルター
-- **データ取得**: TanStack Query（`lib/hooks/usePlans.ts`, `lib/hooks/useSearch.ts`）
-  - `useUpdateStatus()`: ステータス更新用mutation
-- **ルーティング**: React Router
-  - `/` - プラン一覧（フィルター・ソート機能付き）
-  - `/plan/:filename` - プラン詳細表示
-  - `/search` - 検索
-- **UI**: Tailwind CSS + lucide-react アイコン
-- **ステータス関連コンポーネント**:
-  - `StatusBadge`: ステータス表示バッジ（色分け）
-  - `StatusDropdown`: ステータス変更ドロップダウン
-  - `ProjectBadge`: プロジェクトパス表示
+## Product Policy (current)
 
-### 共有パッケージ (packages/shared)
-
-`@ccplans/shared` として api/web 両方から参照。型定義のみで実装コードなし。
-- `PlanMeta`: ファイルメタデータ（filename, title, sections, preview, frontmatter等）
-- `PlanDetail`: メタデータ + content
-- `PlanFrontmatter`: YAMLフロントマターの型（created, modified, projectPath, sessionId, status）
-- `PlanStatus`: ステータス型（`'todo' | 'in_progress' | 'completed'`）
-- API リクエスト/レスポンス型
-
-## データフロー
-
-1. APIがローカルの `~/.claude/plans/*.md` ファイルを直接読み書き
-2. 削除時はデフォルトで `archive/` サブディレクトリへ移動（ソフトデリート）
-3. タイトルはMarkdownの最初のH1から抽出、セクションはH2から抽出
-4. YAMLフロントマターからメタデータ（status, projectPath等）を解析
-5. PostToolUseフック（`hooks/plan-metadata/inject.py`）でプラン作成時にfrontmatterを自動挿入
+- Delete is **permanent** in Electron flow
+- Archive/restore/import/export/backup/notification UI is removed
+- Review prompt generation and clipboard copy are required features
 
 ## Conventions
 
-- **Language**: Write all code comments, commit messages, and PR descriptions in English
+- Write all code comments, commit messages, and PR descriptions in English.

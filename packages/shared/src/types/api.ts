@@ -1,4 +1,5 @@
 import type {
+  ArchivedPlan,
   BackupInfo,
   DiffResult,
   ExportFormat,
@@ -9,6 +10,8 @@ import type {
   PlanMeta,
   PlanStatus,
   PlanVersion,
+  SavedView,
+  SavedViewFilters,
   SearchResult,
   Subtask,
 } from './plan.js';
@@ -159,6 +162,41 @@ export interface RollbackRequest {
 export interface NotificationsListResponse {
   notifications: Notification[];
   unreadCount: number;
+}
+
+/**
+ * GET /api/archive response
+ */
+export interface ArchiveListResponse {
+  archived: ArchivedPlan[];
+  total: number;
+}
+
+/**
+ * IPC/API request for creating a saved view
+ */
+export interface CreateViewRequest {
+  name: string;
+  filters: SavedViewFilters;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
+ * IPC/API request for updating a saved view
+ */
+export interface UpdateViewRequest {
+  name?: string;
+  filters?: SavedViewFilters;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
+ * Views list response payload
+ */
+export interface ViewsListResponse {
+  views: SavedView[];
 }
 
 /**

@@ -1,154 +1,71 @@
 # Claude Plans Manager (ccplans)
 
-A web-based tool for managing Claude Code plan files stored in `~/.claude/plans/`.
+A native Electron app for managing Claude plan files in `~/.claude/plans/`.
+
+## Overview
+
+ccplans is now Electron-first and runs standalone.
+It does **not** require a separate web server or API process.
 
 ## Features
 
-- Browse and search plan files with full-text search
-- View plans with Markdown rendering
-- Create, edit, rename, and delete plans
-- Open plans in external apps (VS Code, Terminal)
-- Soft delete with archive support
-- Status tracking (ToDo, In Progress, Completed)
-- Filter plans by status or project
+- Plan list and full-text search
+- Markdown detail view with section navigation
+- Status management (`todo`, `in_progress`, `review`, `completed`)
+- Kanban view and dependency graph
+- Review mode with prompt generation + clipboard copy
+- Bulk selection + bulk status update + permanent delete
+- Open plan files in external apps (VSCode / Terminal / default app)
 
 ## Prerequisites
 
 - Node.js 20+
 - pnpm 9+
+- macOS / Linux / Windows (Electron-supported)
 
-## Getting Started
+## Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/tanabe1478/ccplans.git
-cd ccplans
-
-# Install dependencies
 pnpm install
-
-# Start development servers (API + Web)
 pnpm dev
 ```
 
-The web app will be available at http://localhost:5173 and the API at http://localhost:3001.
-
 ## Project Structure
 
-```
+```text
 apps/
-  api/          # Fastify REST API server
-  web/          # React SPA (Vite + Tailwind)
+  electron/     # Electron main/preload/renderer + E2E
 packages/
-  shared/       # Shared TypeScript types
-e2e/            # Playwright E2E tests
+  shared/       # Shared type definitions
 hooks/          # Claude Code hook scripts
 ```
 
-## Available Scripts
+## Scripts
 
 | Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start all dev servers |
-| `pnpm build` | Build all packages |
-| `pnpm test` | Run all tests |
-| `pnpm test:e2e` | Run Playwright E2E tests |
-| `pnpm lint` | Type check all packages |
-| `pnpm format` | Format code with Prettier |
+| --- | --- |
+| `pnpm dev` | Launch Electron app in dev mode |
+| `pnpm build` | Build Electron app |
+| `pnpm test` | Run shared + Electron unit tests |
+| `pnpm test:e2e` | Run Electron Playwright E2E |
+| `pnpm lint` | Type-check shared + Electron |
+| `pnpm check` | Biome check |
 
-### Package-specific commands
-
-```bash
-# Run tests for a specific package
-pnpm --filter @ccplans/api test
-
-# Watch mode for tests
-pnpm --filter @ccplans/api test:watch
-
-# Run a single test file
-pnpm --filter @ccplans/api test -- planService.test.ts
-```
-
-## Configuration
-
-Environment variables (optional):
+## Environment Variables
 
 | Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3001` | API server port |
-| `HOST` | `0.0.0.0` | API server host |
-| `PLANS_DIR` | `~/.claude/plans` | Directory containing plan files |
-| `CORS_ORIGINS` | `http://localhost:5173` | Allowed CORS origins (comma-separated) |
+| --- | --- | --- |
+| `PLANS_DIR` | `~/.claude/plans` | Plan file directory |
+| `ARCHIVE_DIR` | `<PLANS_DIR>/archive` | Archive directory (legacy/internal) |
+| `ARCHIVE_RETENTION_DAYS` | `30` | Archive retention days (legacy/internal) |
+| `OPEN_DEVTOOLS` | `false` | Open devtools in Electron dev mode |
 
-## API Endpoints
+## Hook
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/plans` | List all plans |
-| GET | `/api/plans/:filename` | Get plan details |
-| POST | `/api/plans` | Create a new plan |
-| PUT | `/api/plans/:filename` | Update a plan |
-| DELETE | `/api/plans/:filename` | Delete a plan (archive) |
-| POST | `/api/plans/:filename/rename` | Rename a plan |
-| PATCH | `/api/plans/:filename/status` | Update plan status |
-| POST | `/api/plans/:filename/open` | Open in external app |
-| GET | `/api/search?q=query` | Search plans |
-| GET | `/api/health` | Health check |
+This repository includes a Claude Code hook script to inject/maintain plan frontmatter:
 
-## Claude Code Hook
-
-This repository includes a hook that automatically injects YAML frontmatter metadata into plan files when Claude Code creates or modifies them.
-
-### Frontmatter Format
-
-```yaml
----
-created: "2025-02-05T10:30:00Z"
-modified: "2025-02-05T11:00:00Z"
-project_path: "/Users/you/projects/myapp"
-session_id: "abc123xyz"
-status: todo
----
-```
-
-| Field | Description |
-|-------|-------------|
-| `created` | Initial creation timestamp (preserved on update) |
-| `modified` | Last modification timestamp |
-| `project_path` | Working directory when plan was created |
-| `session_id` | Claude Code session identifier |
-| `status` | Plan status: `todo`, `in_progress`, `completed` |
-
-### Setup
-
-1. Copy the hook script:
-
-```bash
-mkdir -p ~/.claude/hooks
-cp hooks/plan-metadata/inject.py ~/.claude/hooks/plan-metadata-inject.py
-```
-
-2. Add to your `~/.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/hooks/plan-metadata-inject.py"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-For detailed documentation, see [hooks/plan-metadata/README.md](hooks/plan-metadata/README.md).
+- `hooks/plan-metadata/inject.py`
+- See `hooks/plan-metadata/README.md` for setup.
 
 ## License
 
