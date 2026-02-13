@@ -1,12 +1,13 @@
 {
   "name": "ccplans",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Claude Plans Manager - Native Electron app for managing ~/.claude/plans/",
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @ccplans/electron dev",
     "build": "pnpm --filter @ccplans/electron build",
+    "dist:mac": "pnpm --filter @ccplans/electron dist:mac",
     "test": "pnpm --filter @ccplans/shared test && pnpm --filter @ccplans/electron test",
     "test:e2e": "pnpm --filter @ccplans/electron test:e2e",
     "lint": "pnpm --filter @ccplans/shared typecheck && pnpm --filter @ccplans/electron lint",

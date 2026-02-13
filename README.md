@@ -30,6 +30,14 @@ pnpm install
 pnpm dev
 ```
 
+## Download
+
+Prebuilt binaries are distributed on GitHub Releases:
+
+- https://github.com/tanabe1478/ccplans/releases/latest
+
+macOS users can download the latest `.dmg` from the assets section.
+
 ## Project Structure
 
 ```text
@@ -46,6 +54,7 @@ hooks/          # Claude Code hook scripts
 | --- | --- |
 | `pnpm dev` | Launch Electron app in dev mode |
 | `pnpm build` | Build Electron app |
+| `pnpm dist:mac` | Build macOS arm64 `.dmg` locally |
 | `pnpm test` | Run shared + Electron unit tests |
 | `pnpm test:e2e` | Run Electron Playwright E2E |
 | `pnpm lint` | Type-check shared + Electron |
@@ -66,6 +75,16 @@ This repository includes a Claude Code hook script to inject/maintain plan front
 
 - `hooks/plan-metadata/inject.py`
 - See `hooks/plan-metadata/README.md` for setup.
+
+## Release
+
+Release is tag-based and fully automated by GitHub Actions:
+
+1. Push a `vX.Y.Z` tag (example: `v0.2.0`)
+2. `Release` workflow builds macOS arm64 `.dmg`
+3. Artifact is attached to a GitHub Release page
+
+Detailed runbook: `docs/release.md`
 
 ## License
 

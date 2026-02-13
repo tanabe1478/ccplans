@@ -35,9 +35,6 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.59.0
         version: 5.90.20(react@18.3.1)
-      electron:
-        specifier: ^33.0.0
-        version: 33.4.11
       highlight.js:
         specifier: ^11.11.1
         version: 11.11.1
@@ -102,6 +99,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      electron:
+        specifier: ^33.0.0
+        version: 33.4.11
       electron-builder:
         specifier: ^25.0.0
         version: 25.1.8(electron-builder-squirrel-windows@25.1.8(dmg-builder@25.1.8))
