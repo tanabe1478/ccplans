@@ -68,7 +68,8 @@ function layoutGraph(graph: DependencyGraph): Map<string, LayoutPosition> {
   }
 
   while (queue.length > 0) {
-    const current = queue.shift()!;
+    const current = queue.shift();
+    if (!current) continue;
     const currentLayer = layers.get(current) ?? 0;
     const node = nodeMap.get(current);
     if (!node) continue;
@@ -124,9 +125,18 @@ function GraphNode({
   const colors = statusColors[node.status] ?? statusColors.todo;
 
   return (
+    /* biome-ignore lint/a11y/useSemanticElements: SVG node uses <g> for grouped shapes and text */
     <g
+      role="button"
+      tabIndex={0}
       transform={`translate(${position.x}, ${position.y})`}
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onClick();
+        }
+      }}
       style={{ cursor: 'pointer' }}
     >
       <rect
@@ -188,9 +198,6 @@ function GraphEdge({
 export function DependencyPage() {
   const frontmatterEnabled = useFrontmatterEnabled();
   const settingsLoading = useSettingsLoading();
-  if (settingsLoading) return null;
-  if (!frontmatterEnabled) return <Navigate to="/" replace />;
-
   const { data: graph, isLoading, error } = useDependencyGraph();
   const navigate = useNavigate();
   const [scale, setScale] = useState(1);
@@ -243,6 +250,9 @@ export function DependencyPage() {
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
   }, []);
+
+  if (settingsLoading) return null;
+  if (!frontmatterEnabled) return <Navigate to="/" replace />;
 
   if (isLoading) {
     return (
@@ -358,6 +368,7 @@ export function DependencyPage() {
       </div>
 
       <div
+        role="application"
         className="border rounded-lg bg-card overflow-hidden"
         style={{ height: 'calc(100vh - 320px)', minHeight: '400px' }}
         onMouseDown={handleMouseDown}

@@ -33,6 +33,7 @@ function KanbanCard({ plan, onDragStart }: KanbanCardProps) {
   const deadlineColor = getDeadlineColor(dueDate);
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: drag-and-drop card container
     <div
       draggable
       onDragStart={(e) => onDragStart(e, plan)}
@@ -91,6 +92,7 @@ function KanbanColumn({
   const isDragOver = dragOverStatus === status;
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: drop zone container
     <div
       className={cn(
         'flex-shrink-0 w-72 flex flex-col rounded-lg border bg-muted/30 transition-colors',
@@ -125,13 +127,13 @@ function KanbanColumn({
 export function KanbanPage() {
   const frontmatterEnabled = useFrontmatterEnabled();
   const settingsLoading = useSettingsLoading();
-  if (settingsLoading) return null;
-  if (!frontmatterEnabled) return <Navigate to="/" replace />;
-
   const { data, isLoading, error } = usePlans();
   const updateStatus = useUpdateStatus();
   const [draggedPlan, setDraggedPlan] = useState<PlanMeta | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<PlanStatus | null>(null);
+
+  if (settingsLoading) return null;
+  if (!frontmatterEnabled) return <Navigate to="/" replace />;
 
   if (isLoading) {
     return (

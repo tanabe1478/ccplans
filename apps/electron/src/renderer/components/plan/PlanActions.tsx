@@ -1,6 +1,6 @@
 import type { ExternalApp } from '@ccplans/shared';
 import { Code, Edit3, ExternalLink, MoreVertical, Terminal, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useDeletePlan, useOpenPlan, useRenamePlan } from '../../lib/hooks';
 import { useUiStore } from '../../stores/uiStore';
 import { Button } from '../ui/Button';
@@ -18,6 +18,7 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newFilename, setNewFilename] = useState(filename);
+  const renameInputId = useId();
 
   const deletePlan = useDeletePlan();
   const renamePlan = useRenamePlan();
@@ -135,10 +136,10 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
         </div>
       </div>
 
-      {/* Click outside to close menu */}
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: Overlay backdrop for click-outside */}
       {showMenu && (
-        <div
+        <button
+          type="button"
+          aria-label="Close actions menu"
           className="fixed inset-0 z-0"
           onClick={() => {
             setShowMenu(false);
@@ -159,8 +160,11 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
       {/* Rename dialog */}
       <Dialog open={showRenameDialog} onClose={() => setShowRenameDialog(false)} title="Rename">
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">New filename</label>
+          <label htmlFor={renameInputId} className="block text-sm font-medium mb-1">
+            New filename
+          </label>
           <input
+            id={renameInputId}
             type="text"
             value={newFilename}
             onChange={(e) => setNewFilename(e.target.value)}

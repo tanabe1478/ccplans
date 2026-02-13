@@ -1,5 +1,5 @@
 import { AlertTriangle } from 'lucide-react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 
@@ -21,6 +21,7 @@ export function DeleteConfirmDialog({
   isDeleting = false,
 }: DeleteConfirmDialogProps) {
   const [confirmText, setConfirmText] = useState('');
+  const confirmInputId = useId();
 
   const handleClose = () => {
     setConfirmText('');
@@ -49,10 +50,11 @@ export function DeleteConfirmDialog({
           </p>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">
+          <label htmlFor={confirmInputId} className="block text-sm font-medium mb-1">
             Type <span className="font-mono text-destructive">{filename}</span> to confirm:
           </label>
           <input
+            id={confirmInputId}
             type="text"
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}

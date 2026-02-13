@@ -1,5 +1,5 @@
 import type { PlanDetail } from '@ccplans/shared';
-import { createElement, type ReactNode } from 'react';
+import { type ComponentType, createElement, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeSlug from 'rehype-slug';
@@ -18,14 +18,18 @@ interface NodeWithPosition {
   };
 }
 
-function lineNumberComponent(tag: string) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return function LineNumbered({ node, children, ...props }: any) {
+type LineNumberedProps = {
+  node?: NodeWithPosition;
+  children?: ReactNode;
+} & Record<string, unknown>;
+
+function lineNumberComponent(tag: string): ComponentType<LineNumberedProps> {
+  return function LineNumbered({ node, children, ...props }: LineNumberedProps) {
     const typedNode = node as NodeWithPosition | undefined;
     const line = typedNode?.position?.start?.line;
     return createElement(
       tag,
-      { ...props, 'data-line': line },
+      { ...(props as object), 'data-line': line },
       line != null
         ? createElement('span', { className: 'line-number-gutter', 'aria-hidden': 'true' }, line)
         : null,
@@ -34,8 +38,7 @@ function lineNumberComponent(tag: string) {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const lineNumberComponents: Record<string, any> = {};
+const lineNumberComponents: Record<string, ComponentType<LineNumberedProps>> = {};
 const blockTags = [
   'h1',
   'h2',

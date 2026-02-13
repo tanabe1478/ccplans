@@ -33,8 +33,12 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: Overlay backdrop for click-outside */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <button
+        type="button"
+        aria-label="Close dialog"
+        className="absolute inset-0 bg-black/50"
+        onClick={onClose}
+      />
       <div
         ref={dialogRef}
         className={cn(

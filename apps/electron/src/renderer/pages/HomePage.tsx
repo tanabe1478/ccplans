@@ -253,6 +253,7 @@ export function HomePage() {
                 const dueDate = fmEnabled ? plan.frontmatter?.dueDate : undefined;
                 const status = normalizePlanStatus(plan.frontmatter?.status);
                 return (
+                  // biome-ignore lint/a11y/noStaticElementInteractions: row supports native context menu
                   <div
                     key={plan.filename}
                     data-plan-row={plan.filename}

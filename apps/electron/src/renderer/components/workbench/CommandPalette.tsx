@@ -73,7 +73,7 @@ export function CommandPalette({
 
   useEffect(() => {
     setActiveIndex(0);
-  }, [query]);
+  }, [filteredItems.length]);
 
   if (!open) return null;
 
@@ -92,7 +92,6 @@ export function CommandPalette({
         <div className="relative border-b border-slate-700">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           <input
-            autoFocus
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={placeholder}

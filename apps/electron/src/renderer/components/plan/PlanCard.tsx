@@ -26,6 +26,7 @@ export function PlanCard({ plan, showCheckbox = false }: PlanCardProps) {
   const updateStatus = useUpdateStatus();
   const fmEnabled = useFrontmatterEnabled();
   const status = normalizePlanStatus(plan.frontmatter?.status);
+  const subtasks = plan.frontmatter?.subtasks ?? [];
   const dueDate = fmEnabled ? plan.frontmatter?.dueDate : undefined;
   const deadlineColor = getDeadlineColor(dueDate);
 
@@ -56,11 +57,7 @@ export function PlanCard({ plan, showCheckbox = false }: PlanCardProps) {
 
       {/* Status dropdown - outside Link to prevent navigation */}
       {fmEnabled && (
-        <div
-          // biome-ignore lint/a11y/useSemanticElements: Wrapper for click stop propagation
-          className="absolute right-3 top-3 z-10"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className="absolute right-3 top-3 z-10">
           <StatusDropdown
             currentStatus={status}
             onStatusChange={handleStatusChange}
@@ -123,10 +120,8 @@ export function PlanCard({ plan, showCheckbox = false }: PlanCardProps) {
           )}
 
           {fmEnabled &&
-            plan.frontmatter?.subtasks &&
-            plan.frontmatter.subtasks.length > 0 &&
+            subtasks.length > 0 &&
             (() => {
-              const subtasks = plan.frontmatter.subtasks!;
               const done = subtasks.filter((s) => s.status === 'done').length;
               const total = subtasks.length;
               const pct = Math.round((done / total) * 100);
@@ -213,10 +208,8 @@ export function PlanCard({ plan, showCheckbox = false }: PlanCardProps) {
           )}
 
           {fmEnabled &&
-            plan.frontmatter?.subtasks &&
-            plan.frontmatter.subtasks.length > 0 &&
+            subtasks.length > 0 &&
             (() => {
-              const subtasks = plan.frontmatter.subtasks!;
               const done = subtasks.filter((s) => s.status === 'done').length;
               const total = subtasks.length;
               const pct = Math.round((done / total) * 100);

@@ -40,7 +40,7 @@ describe('Settings IPC Handlers', () => {
     const handler = getRegisteredHandler('settings:get');
 
     expect(handler).toBeDefined();
-    const result = await handler!({} as never);
+    const result = await handler?.({} as never);
 
     expect(getSettings).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ frontmatterEnabled: true });
@@ -51,7 +51,7 @@ describe('Settings IPC Handlers', () => {
     const handler = getRegisteredHandler('settings:update');
 
     expect(handler).toBeDefined();
-    const result = await handler!({} as never, { frontmatterEnabled: false });
+    const result = await handler?.({} as never, { frontmatterEnabled: false });
 
     expect(updateSettings).toHaveBeenCalledWith({ frontmatterEnabled: false });
     expect(result).toEqual({ frontmatterEnabled: false });

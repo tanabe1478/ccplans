@@ -20,11 +20,6 @@ async function loadRendererWindow(window: BrowserWindow, rendererUrl: string): P
       await window.loadURL(rendererUrl);
       return;
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.warn(
-        `[ccplans] renderer load failed (${attempt}/${DEV_LOAD_MAX_RETRIES}): ${message}`
-      );
-
       if (attempt === DEV_LOAD_MAX_RETRIES) {
         throw error;
       }
@@ -58,9 +53,8 @@ async function createWindow() {
     }
   });
 
-  mainWindow.webContents.on('did-fail-load', (_event, code, description, url, isMainFrame) => {
+  mainWindow.webContents.on('did-fail-load', (_event, _code, _description, _url, isMainFrame) => {
     if (!isMainFrame) return;
-    console.warn(`[ccplans] did-fail-load code=${code} url=${url} description=${description}`);
   });
 
   const rendererUrl = process.env.ELECTRON_RENDERER_URL;
@@ -93,7 +87,6 @@ async function createWindow() {
   </body>
 </html>`;
       await mainWindow.loadURL(`data:text/html;charset=UTF-8,${encodeURIComponent(html)}`);
-      console.error(`[ccplans] renderer failed to load after retries: ${message}`);
     }
 
     if (process.env.OPEN_DEVTOOLS === 'true') {
