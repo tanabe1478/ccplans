@@ -66,11 +66,12 @@ export const test = base.extend<ElectronFixtures>({
   app: async ({ plansDir }, use) => {
     const app = await electron.launch({
       executablePath: electronPath,
-      args: [mainEntry],
+      args: ['--no-sandbox', mainEntry],
       env: {
         ...process.env,
         NODE_ENV: 'production',
         OPEN_DEVTOOLS: 'false',
+        ELECTRON_DISABLE_SANDBOX: '1',
         PLANS_DIR: plansDir,
         ARCHIVE_DIR: join(plansDir, 'archive'),
       },
