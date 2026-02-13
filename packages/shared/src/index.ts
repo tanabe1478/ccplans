@@ -2,12 +2,14 @@
 
 export type {
   ApiError,
+  ArchiveListResponse,
   BackupsListResponse,
   BulkDeleteRequest,
   BulkOperationResponse,
   BulkStatusRequest,
   CreateBackupResponse,
   CreatePlanRequest,
+  CreateViewRequest,
   DependencyGraphResponse,
   DiffResponse,
   ExportQuery,
@@ -30,8 +32,11 @@ export type {
   UpdateFrontmatterRequest,
   UpdatePlanRequest,
   UpdateStatusRequest,
+  UpdateViewRequest,
+  ViewsListResponse,
 } from './types/api.js';
 export type {
+  ArchivedPlan,
   AuditEntry,
   BackupInfo,
   BulkExportFormat,
@@ -54,8 +59,11 @@ export type {
   PlanDetail,
   PlanFrontmatter,
   PlanMeta,
+  PlanPriority,
   PlanStatus,
   PlanVersion,
+  SavedView,
+  SavedViewFilters,
   SearchMatch,
   SearchResult,
   Subtask,

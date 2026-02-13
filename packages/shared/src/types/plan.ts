@@ -3,6 +3,11 @@
  */
 export type PlanStatus = 'todo' | 'in_progress' | 'review' | 'completed';
 
+/**
+ * Priority values used by legacy/frontmatter-compatible features
+ */
+export type PlanPriority = 'low' | 'medium' | 'high' | 'critical';
+
 const PLAN_STATUS_VALUES = ['todo', 'in_progress', 'review', 'completed'] as const;
 const PLAN_STATUS_ALIASES: Record<string, PlanStatus> = {
   todo: 'todo',
@@ -44,6 +49,7 @@ export interface Subtask {
   id: string;
   title: string;
   status: 'todo' | 'done';
+  assignee?: string;
   dueDate?: string;
 }
 
@@ -61,22 +67,70 @@ export const STATUS_TRANSITIONS: Record<PlanStatus, PlanStatus[]> = {
  * Metadata extracted from YAML frontmatter
  */
 export interface PlanFrontmatter {
+  /** Legacy created timestamp (frontmatter field) */
+  created?: string;
+  /** Legacy modified timestamp (frontmatter field) */
+  modified?: string;
   /** Project path where plan was created */
   projectPath?: string;
   /** Claude Code session ID */
   sessionId?: string;
   /** Plan status */
   status?: PlanStatus;
+  /** Legacy priority value */
+  priority?: PlanPriority;
   /** Due date (ISO 8601) */
   dueDate?: string;
+  /** Legacy tags */
+  tags?: string[];
   /** Estimated effort (e.g. "2h", "3d", "1w") */
   estimate?: string;
+  /** Legacy assignee */
+  assignee?: string;
   /** Filenames of blocking plans */
   blockedBy?: string[];
+  /** Legacy archive timestamp */
+  archivedAt?: string;
   /** Subtasks */
   subtasks?: Subtask[];
   /** Schema version for migration */
   schemaVersion?: number;
+}
+
+/**
+ * Saved view filters for preset/custom views
+ */
+export interface SavedViewFilters {
+  status?: PlanStatus;
+  priority?: PlanPriority;
+  projectPath?: string;
+  tag?: string;
+  query?: string;
+}
+
+/**
+ * Saved view definition
+ */
+export interface SavedView {
+  id: string;
+  name: string;
+  filters: SavedViewFilters;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  createdAt: string;
+  isPreset?: boolean;
+}
+
+/**
+ * Archived plan metadata
+ */
+export interface ArchivedPlan {
+  filename: string;
+  originalPath: string;
+  archivedAt: string;
+  expiresAt: string;
+  title: string;
+  preview: string;
 }
 
 /**
