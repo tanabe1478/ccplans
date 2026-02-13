@@ -80,8 +80,8 @@ This repository includes a Claude Code hook script to inject/maintain plan front
 
 Release is tag-based and fully automated by GitHub Actions:
 
-1. Push a `vX.Y.Z` tag (example: `v0.2.0`)
-2. `Release` workflow builds macOS arm64 `.dmg`
+1. Push a `vX.Y.Z` tag (example: `v0.2.1`)
+2. `Release` workflow builds and notarizes macOS arm64 `.dmg`
 3. Artifact is attached to a GitHub Release page
 
 Detailed runbook: `docs/release.md`

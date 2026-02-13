@@ -5,6 +5,8 @@ node_modules/
 # Build outputs
 dist/
 build/
+!apps/electron/build/
+!apps/electron/build/*.plist
 *.tsbuildinfo
 
 # Environment
