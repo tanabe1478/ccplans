@@ -61,7 +61,7 @@ export type {
   Subtask,
   ViewMode,
 } from './types/plan.js';
-export { STATUS_TRANSITIONS } from './types/plan.js';
+export { isPlanStatus, normalizePlanStatus, STATUS_TRANSITIONS } from './types/plan.js';
 export type {
   AppSettings,
   GetSettingsResponse,

@@ -1,5 +1,9 @@
-import type { PlanMeta, PlanStatus } from '@ccplans/shared';
-import { STATUS_TRANSITIONS } from '@ccplans/shared';
+import {
+  normalizePlanStatus,
+  type PlanMeta,
+  type PlanStatus,
+  STATUS_TRANSITIONS,
+} from '@ccplans/shared';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { type DragEvent, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
@@ -150,7 +154,9 @@ export function KanbanPage() {
 
   const plansByStatus = KANBAN_COLUMNS.reduce(
     (acc, col) => {
-      acc[col.status] = plans.filter((p) => (p.frontmatter?.status ?? 'todo') === col.status);
+      acc[col.status] = plans.filter(
+        (p) => normalizePlanStatus(p.frontmatter?.status) === col.status
+      );
       return acc;
     },
     {} as Record<PlanStatus, PlanMeta[]>
@@ -166,7 +172,7 @@ export function KanbanPage() {
     e.preventDefault();
     setDragOverStatus(status);
     if (draggedPlan) {
-      const fromStatus = draggedPlan.frontmatter?.status ?? 'todo';
+      const fromStatus = normalizePlanStatus(draggedPlan.frontmatter?.status);
       e.dataTransfer.dropEffect = canTransition(fromStatus, status) ? 'move' : 'none';
     }
   };
@@ -181,7 +187,7 @@ export function KanbanPage() {
 
     if (!draggedPlan) return;
 
-    const fromStatus = draggedPlan.frontmatter?.status ?? 'todo';
+    const fromStatus = normalizePlanStatus(draggedPlan.frontmatter?.status);
     if (fromStatus === targetStatus) {
       setDraggedPlan(null);
       return;
@@ -201,7 +207,7 @@ export function KanbanPage() {
 
   const canDropOnCurrent =
     draggedPlan && dragOverStatus
-      ? canTransition(draggedPlan.frontmatter?.status ?? 'todo', dragOverStatus)
+      ? canTransition(normalizePlanStatus(draggedPlan.frontmatter?.status), dragOverStatus)
       : false;
 
   return (

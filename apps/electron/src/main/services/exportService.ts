@@ -2,7 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { createGzip } from 'node:zlib';
-import type { PlanFrontmatter, PlanStatus } from '@ccplans/shared';
+import { normalizePlanStatus, type PlanFrontmatter, type PlanStatus } from '@ccplans/shared';
 import { config } from '../config.js';
 
 interface ExportPlan {
@@ -63,9 +63,7 @@ function parseFrontmatter(content: string): {
         frontmatter.sessionId = value;
         break;
       case 'status':
-        if (['todo', 'in_progress', 'review', 'completed'].includes(value)) {
-          frontmatter.status = value as PlanStatus;
-        }
+        frontmatter.status = normalizePlanStatus(value);
         break;
       case 'priority':
         if (['low', 'medium', 'high', 'critical'].includes(value)) {

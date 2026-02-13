@@ -13,10 +13,6 @@ interface UiStore {
   theme: Theme;
   setTheme: (theme: Theme) => void;
 
-  // Sidebar
-  sidebarOpen: boolean;
-  toggleSidebar: () => void;
-
   // Modal
   modalOpen: string | null;
   openModal: (id: string) => void;
@@ -31,7 +27,8 @@ interface UiStore {
 const getInitialTheme = (): Theme => {
   if (typeof window === 'undefined') return 'system';
   const stored = localStorage.getItem('theme') as Theme | null;
-  return stored || 'system';
+  if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
+  return 'system';
 };
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -41,10 +38,6 @@ export const useUiStore = create<UiStore>((set) => ({
     localStorage.setItem('theme', theme);
     set({ theme });
   },
-
-  // Sidebar
-  sidebarOpen: true,
-  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
 
   // Modal
   modalOpen: null,

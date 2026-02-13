@@ -1,8 +1,7 @@
-import type { ExportFormat, ExternalApp } from '@ccplans/shared';
-import { Code, Download, Edit3, ExternalLink, MoreVertical, Terminal, Trash2 } from 'lucide-react';
+import type { ExternalApp } from '@ccplans/shared';
+import { Code, Edit3, ExternalLink, MoreVertical, Terminal, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { useDeletePlan, useExportPlan, useOpenPlan, useRenamePlan } from '../../lib/hooks';
-import { downloadFile } from '../../lib/utils';
+import { useDeletePlan, useOpenPlan, useRenamePlan } from '../../lib/hooks';
 import { useUiStore } from '../../stores/uiStore';
 import { Button } from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
@@ -18,13 +17,11 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
-  const [showExportMenu, setShowExportMenu] = useState(false);
   const [newFilename, setNewFilename] = useState(filename);
 
   const deletePlan = useDeletePlan();
   const renamePlan = useRenamePlan();
   const openPlan = useOpenPlan();
-  const { export: exportPlan } = useExportPlan();
   const { addToast } = useUiStore();
 
   const handleOpen = async (app: ExternalApp) => {
@@ -37,21 +34,10 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
     setShowMenu(false);
   };
 
-  const handleArchive = async () => {
+  const handleDelete = async () => {
     try {
-      await deletePlan.mutateAsync({ filename, archive: true });
-      addToast('Plan archived', 'success');
-      setShowDeleteDialog(false);
-      onDeleted?.();
-    } catch (err) {
-      addToast(`Archive failed: ${err}`, 'error');
-    }
-  };
-
-  const handlePermanentDelete = async () => {
-    try {
-      await deletePlan.mutateAsync({ filename, archive: false });
-      addToast('Plan permanently deleted', 'success');
+      await deletePlan.mutateAsync({ filename });
+      addToast('Plan deleted', 'success');
       setShowDeleteDialog(false);
       onDeleted?.();
     } catch (err) {
@@ -73,19 +59,6 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
       setShowRenameDialog(false);
     } catch (err) {
       addToast(`Rename failed: ${err}`, 'error');
-    }
-  };
-
-  const handleExport = async (format: ExportFormat) => {
-    try {
-      const file = await exportPlan(filename, format);
-      downloadFile(file.filename, file.content, file.mimeType);
-      addToast(`Exported ${file.filename}`, 'success');
-    } catch (err) {
-      addToast(`Export failed: ${err instanceof Error ? err.message : String(err)}`, 'error');
-    } finally {
-      setShowExportMenu(false);
-      setShowMenu(false);
     }
   };
 
@@ -143,44 +116,6 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
                   Rename
                 </button>
 
-                <div className="relative">
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-accent"
-                    onClick={() => setShowExportMenu(!showExportMenu)}
-                  >
-                    <Download className="h-4 w-4" />
-                    Export
-                  </button>
-
-                  {showExportMenu && (
-                    <div className="absolute left-full top-0 w-32 rounded-md border bg-card shadow-lg">
-                      <button
-                        type="button"
-                        className="flex w-full px-4 py-2 text-sm hover:bg-accent"
-                        onClick={() => void handleExport('md')}
-                      >
-                        Markdown
-                      </button>
-                      <button
-                        type="button"
-                        className="flex w-full px-4 py-2 text-sm hover:bg-accent"
-                        onClick={() => void handleExport('html')}
-                      >
-                        HTML
-                      </button>
-                      <button
-                        type="button"
-                        className="flex w-full px-4 py-2 text-sm hover:bg-accent text-muted-foreground"
-                        onClick={() => handleExport('pdf')}
-                        disabled
-                      >
-                        PDF (coming soon)
-                      </button>
-                    </div>
-                  )}
-                </div>
-
                 <hr className="my-1" />
 
                 <button
@@ -207,7 +142,6 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
           className="fixed inset-0 z-0"
           onClick={() => {
             setShowMenu(false);
-            setShowExportMenu(false);
           }}
         />
       )}
@@ -218,9 +152,7 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
         onClose={() => setShowDeleteDialog(false)}
         filename={filename}
         title={title ?? filename}
-        onArchive={handleArchive}
-        onPermanentDelete={handlePermanentDelete}
-        isArchiving={deletePlan.isPending}
+        onDelete={handleDelete}
         isDeleting={deletePlan.isPending}
       />
 

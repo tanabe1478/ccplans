@@ -3,7 +3,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ArchiveService } from '../../services/archiveService.js';
-import { HistoryService } from '../../services/historyService.js';
 import {
   PlanService,
   type PlanServiceConfig,
@@ -17,7 +16,6 @@ describe('PlanService', () => {
   let archiveDir: string;
   let planService: PlanService;
   let archiveService: ArchiveService;
-  let historyService: HistoryService;
   let settingsService: SettingsService;
 
   beforeEach(async () => {
@@ -40,12 +38,10 @@ describe('PlanService', () => {
       archiveRetentionDays: 30,
     });
 
-    historyService = new HistoryService({ plansDir });
     settingsService = new SettingsService({ plansDir });
 
     const deps: PlanServiceDependencies = {
       archiveService,
-      historyService,
       settingsService,
     };
 
@@ -98,6 +94,17 @@ describe('PlanService', () => {
 
     it('should throw error for invalid filename', async () => {
       await expect(planService.getPlan('../invalid.md')).rejects.toThrow('Invalid filename');
+    });
+
+    it('should normalize legacy status values from frontmatter', async () => {
+      await writeFile(
+        join(plansDir, 'legacy-status.md'),
+        '---\nstatus: draft\n---\n\n# Legacy Plan\n\nLegacy content.',
+        'utf-8'
+      );
+
+      const plan = await planService.getPlan('legacy-status.md');
+      expect(plan.frontmatter?.status).toBe('todo');
     });
   });
 

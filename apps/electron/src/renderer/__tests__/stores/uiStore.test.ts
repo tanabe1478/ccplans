@@ -24,7 +24,6 @@ describe('uiStore', () => {
     // Reset store to initial state
     useUiStore.setState({
       theme: 'system',
-      sidebarOpen: true,
       modalOpen: null,
       toasts: [],
     });
@@ -50,25 +49,6 @@ describe('uiStore', () => {
         setTheme('light');
       });
       expect(localStorageMock.setItem).toHaveBeenCalledWith('theme', 'light');
-    });
-  });
-
-  describe('sidebar', () => {
-    it('should have sidebar open by default', () => {
-      const { sidebarOpen } = useUiStore.getState();
-      expect(sidebarOpen).toBe(true);
-    });
-
-    it('should toggle sidebar', () => {
-      const { toggleSidebar } = useUiStore.getState();
-      act(() => {
-        toggleSidebar();
-      });
-      expect(useUiStore.getState().sidebarOpen).toBe(false);
-      act(() => {
-        toggleSidebar();
-      });
-      expect(useUiStore.getState().sidebarOpen).toBe(true);
     });
   });
 

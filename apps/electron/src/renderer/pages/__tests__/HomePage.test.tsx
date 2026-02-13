@@ -14,43 +14,21 @@ vi.mock('@/lib/hooks/usePlans', () => ({
     mutateAsync: vi.fn(),
     isPending: false,
   }),
+  useUpdateStatus: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
 }));
 
 vi.mock('@/contexts/SettingsContext', () => ({
   useFrontmatterEnabled: () => false,
-}));
-
-vi.mock('@/stores/planStore', () => ({
-  usePlanStore: () => ({
-    selectedPlans: new Set(),
-    selectAll: vi.fn(),
-    clearSelection: vi.fn(),
-    sortBy: 'date',
-    setSortBy: vi.fn(),
-    sortOrder: 'desc',
-    toggleSortOrder: vi.fn(),
-    searchQuery: '',
-    setSearchQuery: vi.fn(),
-    statusFilter: 'all',
-    setStatusFilter: vi.fn(),
-    projectFilter: 'all',
-    setProjectFilter: vi.fn(),
-  }),
+  useSettingsLoading: () => false,
 }));
 
 vi.mock('@/stores/uiStore', () => ({
   useUiStore: () => ({
     addToast: vi.fn(),
   }),
-}));
-
-// Mock components that haven't been migrated yet
-vi.mock('@/components/plan/BulkActionBar', () => ({
-  BulkActionBar: () => <div data-testid="bulk-action-bar" />,
-}));
-
-vi.mock('@/components/plan/PlanList', () => ({
-  PlanList: () => <div data-testid="plan-list" />,
 }));
 
 vi.mock('@/components/ui/Button', () => ({
@@ -108,17 +86,19 @@ describe('HomePage', () => {
 
   it('should display plan count', () => {
     render(<HomePage />, { wrapper: createWrapper() });
-    expect(screen.getAllByText(/0 plans/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/0 indexed/).length).toBeGreaterThan(0);
   });
 
   it('should have filter input', () => {
     render(<HomePage />, { wrapper: createWrapper() });
-    expect(screen.getAllByPlaceholderText('Filter...').length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByPlaceholderText('Search by title, filename, section...').length
+    ).toBeGreaterThan(0);
   });
 
-  it('should have sort dropdown', () => {
+  it('should hide status tabs when frontmatter is disabled', () => {
     render(<HomePage />, { wrapper: createWrapper() });
-    expect(screen.getAllByRole('combobox').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: 'All' })).toBeNull();
   });
 
   it('should have select button', () => {

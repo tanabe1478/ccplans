@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 Object.defineProperty(window, 'electronAPI', {
   value: {
     invoke: vi.fn(),
+    writeClipboard: vi.fn(),
     on: vi.fn(() => vi.fn()),
   },
 });

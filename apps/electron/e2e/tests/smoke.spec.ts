@@ -1,122 +1,49 @@
-import { copyFileSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { _electron as electron, expect, test } from '@playwright/test';
-import electronPath from 'electron';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const monorepoRoot = resolve(__dirname, '../../../../');
-const seedDir = resolve(monorepoRoot, 'e2e/fixtures/seed');
-const mainEntry = resolve(monorepoRoot, 'apps/electron/out/main/index.js');
-
-function resetFixtures(targetDir: string): void {
-  mkdirSync(targetDir, { recursive: true });
-
-  const seedFiles = new Set(readdirSync(seedDir).filter((f) => f.endsWith('.md')));
-  for (const file of seedFiles) {
-    copyFileSync(resolve(seedDir, file), resolve(targetDir, file));
-  }
-
-  for (const dir of ['.history', '.backups', 'archive']) {
-    rmSync(resolve(targetDir, dir), { recursive: true, force: true });
-    mkdirSync(resolve(targetDir, dir), { recursive: true });
-  }
-
-  writeFileSync(resolve(targetDir, '.audit.jsonl'), '');
-  writeFileSync(resolve(targetDir, '.views.json'), '[]');
-  writeFileSync(resolve(targetDir, '.notifications-read.json'), '[]');
-  writeFileSync(resolve(targetDir, '.settings.json'), '{"frontmatterEnabled":true}');
-}
+import { expect, test } from '../fixtures';
 
 test.describe('Electron smoke', () => {
-  test('boots and shows plan list from seeded fixtures', async () => {
-    const plansDir = join(tmpdir(), `ccplans-electron-e2e-${Date.now()}-1`);
-    resetFixtures(plansDir);
-
-    const app = await electron.launch({
-      executablePath: electronPath,
-      args: [mainEntry],
-      env: {
-        ...process.env,
-        NODE_ENV: 'production',
-        OPEN_DEVTOOLS: 'false',
-        PLANS_DIR: plansDir,
-        ARCHIVE_DIR: join(plansDir, 'archive'),
-      },
-    });
-
-    try {
-      const page = await app.firstWindow();
-      await expect(page.getByRole('heading', { name: 'Plans' })).toBeVisible();
-      await expect(page.getByText('CLI Tool Refactoring')).toBeVisible();
-    } finally {
-      await app.close();
-      rmSync(plansDir, { recursive: true, force: true });
-    }
+  test('boots and shows plan list from seeded fixtures', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'Plans' })).toBeVisible();
+    await expect(page.getByText('CLI Tool Refactoring')).toBeVisible();
   });
 
-  test('updates a plan status from card dropdown', async () => {
-    const plansDir = join(tmpdir(), `ccplans-electron-e2e-${Date.now()}-2`);
-    resetFixtures(plansDir);
+  test('updates a plan status from card dropdown', async ({ page }) => {
+    const row = page.locator('[data-plan-row="purple-swimming-fish.md"]').first();
 
-    const app = await electron.launch({
-      executablePath: electronPath,
-      args: [mainEntry],
-      env: {
-        ...process.env,
-        NODE_ENV: 'production',
-        OPEN_DEVTOOLS: 'false',
-        PLANS_DIR: plansDir,
-        ARCHIVE_DIR: join(plansDir, 'archive'),
-      },
-    });
-
-    try {
-      const page = await app.firstWindow();
-      const card = page
-        .locator('div.group.relative')
-        .filter({ hasText: 'CLI Tool Refactoring' })
-        .first();
-
-      await expect(card.getByRole('button', { name: 'In Progress' })).toBeVisible();
-      await card.getByRole('button', { name: 'In Progress' }).click();
-      await page.getByRole('button', { name: 'Review' }).click();
-      await expect(card.getByRole('button', { name: 'Review' })).toBeVisible();
-    } finally {
-      await app.close();
-      rmSync(plansDir, { recursive: true, force: true });
-    }
+    const statusCell = row.locator('div.relative').first();
+    await expect(statusCell.getByRole('button', { name: 'In Progress' })).toBeVisible();
+    await statusCell.getByRole('button', { name: 'In Progress' }).click();
+    await statusCell.getByRole('button', { name: 'Review' }).click();
+    await expect(statusCell.getByRole('button', { name: 'Review' })).toBeVisible();
   });
 
-  test('creates a backup from the backups page', async () => {
-    const plansDir = join(tmpdir(), `ccplans-electron-e2e-${Date.now()}-3`);
-    resetFixtures(plansDir);
+  test('select mode uses card click for selection without navigation', async ({ page }) => {
+    await page.getByRole('button', { name: 'Select' }).click();
+    await page.locator('[data-plan-row="purple-swimming-fish.md"] input[type="checkbox"]').click();
 
-    const app = await electron.launch({
-      executablePath: electronPath,
-      args: [mainEntry],
-      env: {
-        ...process.env,
-        NODE_ENV: 'production',
-        OPEN_DEVTOOLS: 'false',
-        PLANS_DIR: plansDir,
-        ARCHIVE_DIR: join(plansDir, 'archive'),
-      },
-    });
+    await expect(page.getByRole('button', { name: 'Delete (1)' })).toBeVisible();
+    await expect(page).not.toHaveURL(/\/plan\//);
+  });
 
-    try {
-      const page = await app.firstWindow();
+  test('opens review page and copies review prompt to clipboard', async ({ app, page }) => {
+    const row = page.locator('[data-plan-row="purple-swimming-fish.md"]').first();
+    await row.getByRole('button', { name: 'Open detail' }).click();
+    await expect(page).toHaveURL(/#\/plan\//);
 
-      await page.getByRole('button', { name: 'More actions' }).click();
-      await page.getByRole('link', { name: 'Backups' }).click();
-      await expect(page.getByRole('heading', { name: 'Backups' })).toBeVisible();
+    await page.getByRole('link', { name: 'Review' }).click();
+    await expect(page.getByRole('heading', { name: 'CLI Tool Refactoring' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Copy All Prompts' })).toBeVisible();
 
-      await page.getByRole('button', { name: 'Create Backup' }).click();
-      await expect(page.getByText(/\.json$/)).toBeVisible();
-    } finally {
-      await app.close();
-      rmSync(plansDir, { recursive: true, force: true });
-    }
+    const gutter = page.locator('.review-diff-gutter').first();
+    await gutter.click();
+
+    const commentInput = page.getByPlaceholder(/add a comment/i);
+    await commentInput.fill('Please simplify this section');
+    await page.getByRole('button', { name: 'Comment' }).click();
+
+    await page.getByRole('button', { name: 'Copy prompt' }).first().click();
+
+    const clipboardText = await app.evaluate(({ clipboard }) => clipboard.readText());
+    expect(clipboardText).toContain('Please simplify this section');
+    expect(clipboardText).toContain('purple-swimming-fish.md:L1');
   });
 });

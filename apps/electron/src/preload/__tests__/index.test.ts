@@ -11,9 +11,14 @@ const mockIpcRenderer = {
   removeListener: vi.fn(),
 };
 
+const mockClipboard = {
+  writeText: vi.fn(),
+};
+
 vi.mock('electron', () => ({
   contextBridge: mockContextBridge,
   ipcRenderer: mockIpcRenderer,
+  clipboard: mockClipboard,
 }));
 
 describe('Preload Script', () => {
@@ -52,6 +57,18 @@ describe('Preload Script', () => {
 
     expect(api).toHaveProperty('on');
     expect(typeof api.on).toBe('function');
+  });
+
+  it('should expose writeClipboard function', async () => {
+    await import('../index');
+
+    const call = mockContextBridge.exposeInMainWorld.mock.calls[0];
+    const api = call[1] as { writeClipboard: (text: string) => void };
+
+    api.writeClipboard('hello');
+
+    expect(api).toHaveProperty('writeClipboard');
+    expect(mockClipboard.writeText).toHaveBeenCalledWith('hello');
   });
 
   it('invoke should call ipcRenderer.invoke with channel and args', async () => {

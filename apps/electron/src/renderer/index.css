@@ -4,105 +4,122 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --background: 222 24% 8%;
+    --foreground: 210 20% 92%;
+    --card: 222 21% 11%;
+    --card-foreground: 210 20% 92%;
+    --popover: 222 21% 11%;
+    --popover-foreground: 210 20% 92%;
+    --primary: 203 88% 66%;
+    --primary-foreground: 222 24% 8%;
+    --secondary: 220 16% 17%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 220 17% 15%;
+    --muted-foreground: 218 12% 62%;
+    --accent: 220 17% 15%;
+    --accent-foreground: 210 20% 92%;
+    --destructive: 350 82% 65%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 15% 24%;
+    --input: 220 15% 24%;
+    --ring: 203 88% 66%;
+    --radius: 0.125rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --background: 222 24% 8%;
+    --foreground: 210 20% 92%;
+    --card: 222 21% 11%;
+    --card-foreground: 210 20% 92%;
+    --popover: 222 21% 11%;
+    --popover-foreground: 210 20% 92%;
+    --primary: 203 88% 66%;
+    --primary-foreground: 222 24% 8%;
+    --secondary: 220 16% 17%;
+    --secondary-foreground: 210 20% 90%;
+    --muted: 220 17% 15%;
+    --muted-foreground: 218 12% 62%;
+    --accent: 220 17% 15%;
+    --accent-foreground: 210 20% 92%;
+    --destructive: 350 82% 65%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 15% 24%;
+    --input: 220 15% 24%;
+    --ring: 203 88% 66%;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    border-radius: 0;
   }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
     margin: 0;
     min-height: 100vh;
+    font-family: "SF Pro Text", "Avenir Next", "Helvetica Neue", "IBM Plex Sans", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    letter-spacing: 0.005em;
+  }
+
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Monaco, monospace;
   }
 }
 
-/* Native-like scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #0b1220;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+  border: 2px solid #0b1220;
+  background: #334155;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #475569;
 }
 
-/* Markdown content styles */
 .markdown-content {
   @apply max-w-none text-foreground;
 }
 
 .markdown-content h1 {
-  @apply text-2xl font-bold mt-6 mb-4 pb-2 border-b;
+  @apply mt-6 mb-3 border-b pb-2 text-xl font-semibold;
 }
 
 .markdown-content h2 {
-  @apply text-xl font-semibold mt-5 mb-3;
+  @apply mt-5 mb-2 text-lg font-semibold;
 }
 
 .markdown-content h3 {
-  @apply text-lg font-medium mt-4 mb-2;
+  @apply mt-4 mb-2 text-base font-medium;
 }
 
 .markdown-content p {
-  @apply my-3 leading-relaxed;
+  @apply my-2 leading-relaxed;
 }
 
 .markdown-content ul,
 .markdown-content ol {
-  @apply my-3 pl-6;
+  @apply my-2 pl-6;
 }
 
 .markdown-content li {
@@ -110,11 +127,11 @@
 }
 
 .markdown-content code {
-  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
+  @apply bg-muted px-1.5 py-0.5 text-[12px] font-mono;
 }
 
 .markdown-content pre {
-  @apply bg-muted p-4 rounded-lg overflow-x-auto my-4;
+  @apply my-3 overflow-x-auto border border-border bg-muted p-3;
 }
 
 .markdown-content pre code {
@@ -122,12 +139,12 @@
 }
 
 .markdown-content table {
-  @apply w-full my-4 border-collapse;
+  @apply my-3 w-full border-collapse;
 }
 
 .markdown-content th,
 .markdown-content td {
-  @apply border px-3 py-2 text-left;
+  @apply border px-2 py-1.5 text-left;
 }
 
 .markdown-content th {
@@ -135,27 +152,116 @@
 }
 
 .markdown-content blockquote {
-  @apply border-l-4 border-muted pl-4 italic my-4;
+  @apply my-3 border-l-2 border-muted pl-3 italic;
 }
 
 .markdown-content a {
   @apply text-primary underline;
 }
 
-/* Section navigation styles */
 .section-nav {
-  @apply rounded-lg border bg-card p-4;
+  @apply border bg-card p-2;
 }
 
 .section-nav-item {
-  @apply block py-1 px-2 rounded transition-colors;
+  @apply block px-2 py-1 text-[12px] transition-colors;
 }
 
 .section-nav-item:hover {
   @apply bg-muted;
 }
 
-/* Scroll margin for heading anchors */
 .markdown-content [id] {
-  scroll-margin-top: 1rem;
+  scroll-margin-top: 0.75rem;
+}
+
+.review-file {
+  border: 1px solid #1f2937;
+  background: #0f172a;
+}
+
+.review-file-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #1f2937;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.review-file-content {
+  max-height: 64vh;
+  overflow: auto;
+}
+
+.review-diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.review-diff-line {
+  border-bottom: 1px solid #172033;
+}
+
+.review-diff-line.has-comment {
+  background: #0b1a34;
+}
+
+.review-diff-line.selecting {
+  background: #1e293b;
+}
+
+.review-diff-gutter {
+  width: 56px;
+  cursor: pointer;
+  border-right: 1px solid #1f2937;
+  background: #0b1220;
+  padding: 0;
+  color: #64748b;
+}
+
+.review-diff-gutter:hover {
+  background: #131d33;
+  color: #cbd5e1;
+}
+
+.review-line-num {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0;
+  font-size: 11px;
+  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Monaco, monospace;
+}
+
+.review-add-btn {
+  display: none;
+}
+
+.review-diff-code {
+  padding: 4px 8px;
+  white-space: pre-wrap;
+  font-size: 12px;
+  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, Monaco, monospace;
+  color: #dbeafe;
+}
+
+.review-comment-row {
+  border-bottom: 1px solid #172033;
+}
+
+.review-comment-cell {
+  padding: 6px 8px;
+  background: #0b1220;
+}
+
+.electron-drag-region {
+  -webkit-app-region: drag;
+}
+
+.electron-no-drag {
+  -webkit-app-region: no-drag;
 }

@@ -7,7 +7,7 @@ interface SettingsContextValue {
 }
 
 const SettingsContext = createContext<SettingsContextValue>({
-  frontmatterEnabled: false,
+  frontmatterEnabled: true,
   isLoading: true,
 });
 
@@ -15,7 +15,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const { data, isLoading } = useSettings();
 
   const value: SettingsContextValue = {
-    frontmatterEnabled: data?.frontmatterEnabled ?? false,
+    frontmatterEnabled: data?.frontmatterEnabled ?? true,
     isLoading,
   };
 

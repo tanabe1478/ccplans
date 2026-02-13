@@ -5,13 +5,41 @@ import { registerAllHandlers } from './ipc/index.js';
 
 let mainWindow: BrowserWindow | null = null;
 const currentDir = dirname(fileURLToPath(import.meta.url));
+const DEV_LOAD_MAX_RETRIES = 30;
+const DEV_LOAD_RETRY_MS = 300;
 
-function createWindow() {
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function loadRendererWindow(window: BrowserWindow, rendererUrl: string): Promise<void> {
+  for (let attempt = 1; attempt <= DEV_LOAD_MAX_RETRIES; attempt += 1) {
+    try {
+      await window.loadURL(rendererUrl);
+      return;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `[ccplans] renderer load failed (${attempt}/${DEV_LOAD_MAX_RETRIES}): ${message}`
+      );
+
+      if (attempt === DEV_LOAD_MAX_RETRIES) {
+        throw error;
+      }
+      await sleep(DEV_LOAD_RETRY_MS);
+    }
+  }
+}
+
+async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     minWidth: 800,
     minHeight: 600,
+    show: false,
     titleBarStyle: 'hidden', // macOS native title bar
     trafficLightPosition: { x: 15, y: 15 },
     webPreferences: {
@@ -24,17 +52,56 @@ function createWindow() {
     },
   });
 
+  mainWindow.once('ready-to-show', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.show();
+    }
+  });
+
+  mainWindow.webContents.on('did-fail-load', (_event, code, description, url, isMainFrame) => {
+    if (!isMainFrame) return;
+    console.warn(`[ccplans] did-fail-load code=${code} url=${url} description=${description}`);
+  });
+
   const rendererUrl = process.env.ELECTRON_RENDERER_URL;
 
   // Development/preview: load from renderer dev server URL when provided.
   if (rendererUrl) {
-    mainWindow.loadURL(rendererUrl);
+    try {
+      await loadRendererWindow(mainWindow, rendererUrl);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const html = `
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>ccplans: failed to load renderer</title>
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 24px; color: #111827; }
+      h1 { margin: 0 0 12px 0; font-size: 20px; }
+      p, pre { margin: 8px 0; }
+      pre { background: #f3f4f6; padding: 12px; border-radius: 8px; white-space: pre-wrap; }
+      code { background: #eef2ff; padding: 2px 6px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <h1>Renderer failed to load</h1>
+    <p>URL: <code>${rendererUrl}</code></p>
+    <pre>${message}</pre>
+    <p>Retry command: <code>pnpm --filter @ccplans/electron dev</code></p>
+  </body>
+</html>`;
+      await mainWindow.loadURL(`data:text/html;charset=UTF-8,${encodeURIComponent(html)}`);
+      console.error(`[ccplans] renderer failed to load after retries: ${message}`);
+    }
+
     if (process.env.OPEN_DEVTOOLS === 'true') {
       mainWindow.webContents.openDevTools();
     }
   } else {
     // Production: load built files
-    mainWindow.loadFile(join(currentDir, '../renderer/index.html'));
+    await mainWindow.loadFile(join(currentDir, '../renderer/index.html'));
   }
 
   mainWindow.on('closed', () => {
@@ -47,11 +114,11 @@ app.whenReady().then(() => {
   // Register all IPC handlers
   registerAllHandlers(ipcMain);
 
-  createWindow();
+  void createWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      void createWindow();
     }
   });
 });

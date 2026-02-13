@@ -1,4 +1,4 @@
-import type { PlanStatus, SavedView, ViewMode } from '@ccplans/shared';
+import type { PlanStatus } from '@ccplans/shared';
 import { create } from 'zustand';
 
 interface PlanStore {
@@ -8,10 +8,6 @@ interface PlanStore {
   selectAll: (filenames: string[]) => void;
   clearSelection: () => void;
   isSelected: (filename: string) => boolean;
-
-  // View state
-  viewMode: ViewMode;
-  setViewMode: (mode: ViewMode) => void;
 
   // Sort state
   sortBy: 'name' | 'date' | 'size';
@@ -26,11 +22,6 @@ interface PlanStore {
   setStatusFilter: (status: PlanStatus | 'all') => void;
   projectFilter: string | 'all';
   setProjectFilter: (project: string | 'all') => void;
-
-  // Saved view state
-  activeViewId: string | null;
-  applyView: (view: SavedView) => void;
-  clearActiveView: () => void;
 }
 
 export const usePlanStore = create<PlanStore>((set, get) => ({
@@ -50,10 +41,6 @@ export const usePlanStore = create<PlanStore>((set, get) => ({
   clearSelection: () => set({ selectedPlans: new Set() }),
   isSelected: (filename) => get().selectedPlans.has(filename),
 
-  // View
-  viewMode: 'list',
-  setViewMode: (mode) => set({ viewMode: mode }),
-
   // Sort
   sortBy: 'date',
   sortOrder: 'desc',
@@ -68,24 +55,4 @@ export const usePlanStore = create<PlanStore>((set, get) => ({
   setStatusFilter: (status) => set({ statusFilter: status }),
   projectFilter: 'all',
   setProjectFilter: (project) => set({ projectFilter: project }),
-
-  // Saved views
-  activeViewId: null,
-  applyView: (view) =>
-    set({
-      activeViewId: view.id,
-      statusFilter: view.filters.status ?? 'all',
-      searchQuery: view.filters.searchQuery ?? '',
-      sortBy: (view.sortBy as 'name' | 'date' | 'size') ?? 'date',
-      sortOrder: view.sortOrder ?? 'desc',
-    }),
-  clearActiveView: () =>
-    set({
-      activeViewId: null,
-      statusFilter: 'all',
-      searchQuery: '',
-      sortBy: 'date',
-      sortOrder: 'desc',
-      projectFilter: 'all',
-    }),
 }));

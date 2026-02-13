@@ -25,6 +25,7 @@ beforeEach(() => {
 vi.stubGlobal('electronAPI', {
   invoke: vi.fn().mockResolvedValue([]),
   on: vi.fn().mockReturnValue(() => {}),
+  writeClipboard: vi.fn(),
 });
 
 describe('App', () => {

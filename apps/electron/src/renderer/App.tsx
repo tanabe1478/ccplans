@@ -2,8 +2,6 @@ import { useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { SettingsProvider } from '@/contexts/SettingsContext';
-import { ArchivePage } from '@/pages/ArchivePage';
-import { BackupPage } from '@/pages/BackupPage';
 import { DependencyPage } from '@/pages/DependencyPage';
 import { HomePage } from '@/pages/HomePage';
 import { KanbanPage } from '@/pages/KanbanPage';
@@ -48,9 +46,7 @@ function App() {
           <Route path="plan/:filename/review" element={<ReviewPage />} />
           <Route path="search" element={<SearchPage />} />
           <Route path="kanban" element={<KanbanPage />} />
-          <Route path="archive" element={<ArchivePage />} />
           <Route path="dependencies" element={<DependencyPage />} />
-          <Route path="backups" element={<BackupPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>

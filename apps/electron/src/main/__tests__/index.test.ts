@@ -18,6 +18,9 @@ vi.mock('electron', () => ({
     quit: vi.fn(),
   },
   BrowserWindow: vi.fn().mockImplementation(() => ({
+    show: vi.fn(),
+    once: vi.fn(),
+    isDestroyed: vi.fn(() => false),
     loadFile: vi.fn(),
     loadURL: vi.fn(),
     on: vi.fn(),

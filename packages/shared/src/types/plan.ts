@@ -3,6 +3,40 @@
  */
 export type PlanStatus = 'todo' | 'in_progress' | 'review' | 'completed';
 
+const PLAN_STATUS_VALUES = ['todo', 'in_progress', 'review', 'completed'] as const;
+const PLAN_STATUS_ALIASES: Record<string, PlanStatus> = {
+  todo: 'todo',
+  to_do: 'todo',
+  'to-do': 'todo',
+  backlog: 'todo',
+  draft: 'todo',
+  open: 'todo',
+  in_progress: 'in_progress',
+  'in-progress': 'in_progress',
+  inprogress: 'in_progress',
+  doing: 'in_progress',
+  active: 'in_progress',
+  progress: 'in_progress',
+  review: 'review',
+  reviewing: 'review',
+  qa: 'review',
+  completed: 'completed',
+  complete: 'completed',
+  done: 'completed',
+  closed: 'completed',
+};
+
+export function isPlanStatus(value: unknown): value is PlanStatus {
+  return typeof value === 'string' && (PLAN_STATUS_VALUES as readonly string[]).includes(value);
+}
+
+export function normalizePlanStatus(value: unknown, fallback: PlanStatus = 'todo'): PlanStatus {
+  if (isPlanStatus(value)) return value;
+  if (typeof value !== 'string') return fallback;
+  const normalized = value.trim().toLowerCase();
+  return PLAN_STATUS_ALIASES[normalized] ?? fallback;
+}
+
 /**
  * Subtask within a plan
  */

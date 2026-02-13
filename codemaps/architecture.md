@@ -1,54 +1,36 @@
 # Architecture Codemap
 
-> Freshness: 2026-02-11T01:15:00Z | Commit: 10183ca
+> Freshness: 2026-02-13
 
 ## Package Structure
 
-```
-ccplans/                          pnpm monorepo
-├── apps/api/                     Fastify REST API (port 3001)
-│   └── depends: @ccplans/shared
-├── apps/web/                     React SPA + Vite (port 5173)
-│   └── depends: @ccplans/shared
-├── packages/shared/              Shared TypeScript types (types only)
-└── e2e/                          Playwright E2E tests
+```text
+ccplans/
+├── apps/electron/
+│   ├── src/main/        # Electron main process, IPC, services
+│   ├── src/preload/     # contextBridge API exposure
+│   ├── src/renderer/    # React UI
+│   └── e2e/             # Electron Playwright tests
+├── packages/shared/     # shared TypeScript types
+└── hooks/               # Claude Code hooks
 ```
 
 ## Data Flow
 
+```text
+~/.claude/plans/*.md
+   ↑            ↓
+main/services (file I/O, parsing, status transitions)
+   ↑            ↓
+main/ipc handlers  <->  preload bridge  <->  renderer hooks/components
 ```
-~/.claude/plans/*.md  ←→  apps/api (Fastify)  ←→  apps/web (React)
-        ↕                       ↕                       ↕
-   .history/              auditService            localStorage
-   .audit.jsonl           validationSvc           (review comments)
-   archive/               conflictSvc             Zustand stores
-   .saved-views.json                              TanStack Query
-```
-
-## Stack
-
-| Layer      | Technology                                       |
-|------------|--------------------------------------------------|
-| Frontend   | React 18, Vite, Tailwind CSS, Zustand, TanStack Query |
-| Backend    | Fastify, tsx, Node.js                            |
-| Types      | TypeScript (strict), shared via workspace        |
-| Testing    | Vitest (unit), Playwright (E2E)                  |
-| Build      | pnpm workspaces, tsc, Vite                       |
 
 ## Key Commands
 
 ```bash
-pnpm dev            # API + Web concurrent dev
-pnpm build          # All packages
-pnpm test           # All unit tests
-pnpm test:e2e       # Playwright E2E
+pnpm dev
+pnpm build
+pnpm test
+pnpm test:e2e
+pnpm lint
 ```
-
-## File Storage
-
-- Plans: `~/.claude/plans/*.md` (Markdown with YAML frontmatter)
-- History: `~/.claude/plans/.history/{filename}/{timestamp}.md`
-- Archive: `~/.claude/plans/archive/`
-- Audit: `~/.claude/plans/.audit.jsonl`
-- Views: `~/.claude/plans/.saved-views.json`
-- Review comments: `localStorage` (per-plan key)

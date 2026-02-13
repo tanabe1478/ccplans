@@ -5,6 +5,10 @@ import { DEFAULT_SETTINGS } from '@ccplans/shared';
 import { config } from '../config.js';
 
 const SETTINGS_FILENAME = '.settings.json';
+const ELECTRON_DEFAULT_SETTINGS: AppSettings = {
+  ...DEFAULT_SETTINGS,
+  frontmatterEnabled: true,
+};
 
 export interface SettingsServiceConfig {
   plansDir: string;
@@ -30,11 +34,11 @@ export class SettingsService {
     try {
       const content = await readFile(this.getSettingsPath(), 'utf-8');
       const parsed = JSON.parse(content) as Partial<AppSettings>;
-      this.cachedSettings = { ...DEFAULT_SETTINGS, ...parsed };
+      this.cachedSettings = { ...ELECTRON_DEFAULT_SETTINGS, ...parsed };
       return this.cachedSettings;
     } catch {
       // File doesn't exist or is invalid - return defaults
-      this.cachedSettings = { ...DEFAULT_SETTINGS };
+      this.cachedSettings = { ...ELECTRON_DEFAULT_SETTINGS };
       return this.cachedSettings;
     }
   }

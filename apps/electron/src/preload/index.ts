@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { contextBridge, ipcRenderer } from 'electron';
+import { clipboard, contextBridge, ipcRenderer } from 'electron';
 
 // Type definitions for IPC channels
 export type IpcChannel =
@@ -18,6 +18,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Generic invoke for any IPC channel
   invoke: (channel: IpcChannel, ...args: unknown[]): Promise<unknown> => {
     return ipcRenderer.invoke(channel, ...args);
+  },
+
+  // Clipboard write fallback for contexts where navigator.clipboard is unavailable.
+  writeClipboard: (text: string): void => {
+    clipboard.writeText(text);
   },
 
   // Event listeners

@@ -5,7 +5,6 @@
 
 import type {
   PlanStatus as BasePlanStatus,
-  RollbackRequest as BaseRollbackRequest,
   UpdateViewRequest as BaseUpdateViewRequest,
   SavedView,
   SavedViewFilters,
@@ -23,13 +22,6 @@ export type SubtaskActionRequest =
   | { action: 'update'; filename: string; subtaskId: string; subtask: Partial<Omit<Subtask, 'id'>> }
   | { action: 'delete'; filename: string; subtaskId: string }
   | { action: 'toggle'; filename: string; subtaskId: string };
-
-/**
- * Extended rollback request that includes filename
- */
-export interface RollbackRequest extends BaseRollbackRequest {
-  filename: string;
-}
 
 /**
  * Extended update view request that includes id

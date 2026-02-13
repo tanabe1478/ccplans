@@ -33,15 +33,6 @@ vi.mock('../../services/subtaskService.js', () => ({
   },
 }));
 
-vi.mock('../../services/historyService.js', () => ({
-  historyService: {
-    listVersions: vi.fn(),
-    rollback: vi.fn(),
-    getVersion: vi.fn(),
-    computeDiff: vi.fn(),
-  },
-}));
-
 vi.mock('../../services/openerService.js', () => ({
   openerService: {
     openFile: vi.fn(),
@@ -107,24 +98,10 @@ describe('Plans IPC Handlers', () => {
   it('should register bulk operation handlers', () => {
     expect(mockIpcMain.handle).toHaveBeenCalledWith('plans:bulkDelete', expect.any(Function));
     expect(mockIpcMain.handle).toHaveBeenCalledWith('plans:bulkStatus', expect.any(Function));
-    expect(mockIpcMain.handle).toHaveBeenCalledWith('plans:bulkTags', expect.any(Function));
-    expect(mockIpcMain.handle).toHaveBeenCalledWith('plans:bulkAssign', expect.any(Function));
-    expect(mockIpcMain.handle).toHaveBeenCalledWith('plans:bulkPriority', expect.any(Function));
-    expect(mockIpcMain.handle).toHaveBeenCalledWith('plans:bulkArchive', expect.any(Function));
-  });
-
-  it('should register history handlers', () => {
-    expect(mockIpcMain.handle).toHaveBeenCalledWith('plans:history', expect.any(Function));
-    expect(mockIpcMain.handle).toHaveBeenCalledWith('plans:rollback', expect.any(Function));
-    expect(mockIpcMain.handle).toHaveBeenCalledWith('plans:diff', expect.any(Function));
   });
 
   it('should register plans:open handler', () => {
     expect(mockIpcMain.handle).toHaveBeenCalledWith('plans:open', expect.any(Function));
-  });
-
-  it('should register plans:export handler', () => {
-    expect(mockIpcMain.handle).toHaveBeenCalledWith('plans:export', expect.any(Function));
   });
 
   it('should register plans:availableTransitions handler', () => {
@@ -135,6 +112,6 @@ describe('Plans IPC Handlers', () => {
   });
 
   it('should register all handlers exactly once', () => {
-    expect(mockIpcMain.handle).toHaveBeenCalledTimes(24);
+    expect(mockIpcMain.handle).toHaveBeenCalledTimes(16);
   });
 });

@@ -1,14 +1,7 @@
-import type { PlanPriority, PlanStatus } from '@ccplans/shared';
-import { Archive, ArrowRightCircle, CheckSquare, Flag, Tags, User, XSquare } from 'lucide-react';
-import { useState } from 'react';
+import type { PlanStatus } from '@ccplans/shared';
+import { ArrowRightCircle, CheckSquare, XSquare } from 'lucide-react';
 import { useFrontmatterEnabled } from '../../contexts/SettingsContext';
-import {
-  useBulkArchive,
-  useBulkUpdateAssign,
-  useBulkUpdatePriority,
-  useBulkUpdateStatus,
-  useBulkUpdateTags,
-} from '../../lib/hooks';
+import { useBulkUpdateStatus } from '../../lib/hooks';
 import { usePlanStore } from '../../stores/planStore';
 import { useUiStore } from '../../stores/uiStore';
 
@@ -19,23 +12,9 @@ export function BulkActionBar() {
   const count = selectedPlans.size;
 
   const bulkStatus = useBulkUpdateStatus();
-  const bulkTags = useBulkUpdateTags();
-  const bulkAssign = useBulkUpdateAssign();
-  const bulkPriority = useBulkUpdatePriority();
-  const bulkArchive = useBulkArchive();
-
-  const [tagInput, setTagInput] = useState('');
-  const [assigneeInput, setAssigneeInput] = useState('');
-  const [showTagInput, setShowTagInput] = useState(false);
-  const [showAssignInput, setShowAssignInput] = useState(false);
 
   const filenames = Array.from(selectedPlans);
-  const isPending =
-    bulkStatus.isPending ||
-    bulkTags.isPending ||
-    bulkAssign.isPending ||
-    bulkPriority.isPending ||
-    bulkArchive.isPending;
+  const isPending = bulkStatus.isPending;
 
   const handleBulkStatus = async (status: PlanStatus) => {
     try {
@@ -49,71 +28,6 @@ export function BulkActionBar() {
       clearSelection();
     } catch {
       addToast('Bulk status update failed', 'error');
-    }
-  };
-
-  const handleBulkTags = async (action: 'add' | 'remove') => {
-    const tags = tagInput
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
-    if (tags.length === 0) return;
-    try {
-      const result = await bulkTags.mutateAsync({ filenames, action, tags });
-      const msg = `Tags ${action === 'add' ? 'added to' : 'removed from'} ${result.succeeded.length} plans`;
-      if (result.failed.length > 0) {
-        addToast(`${msg}, ${result.failed.length} failed`, 'info');
-      } else {
-        addToast(msg, 'success');
-      }
-      setTagInput('');
-      setShowTagInput(false);
-      clearSelection();
-    } catch {
-      addToast('Bulk tag update failed', 'error');
-    }
-  };
-
-  const handleBulkAssign = async () => {
-    if (!assigneeInput.trim()) return;
-    try {
-      const result = await bulkAssign.mutateAsync({ filenames, assignee: assigneeInput.trim() });
-      addToast(`Assigned ${result.succeeded.length} plans`, 'success');
-      setAssigneeInput('');
-      setShowAssignInput(false);
-      clearSelection();
-    } catch {
-      addToast('Bulk assign failed', 'error');
-    }
-  };
-
-  const handleBulkPriority = async (priority: PlanPriority) => {
-    try {
-      const result = await bulkPriority.mutateAsync({ filenames, priority });
-      const msg = `Priority set for ${result.succeeded.length} plans`;
-      if (result.failed.length > 0) {
-        addToast(`${msg}, ${result.failed.length} failed`, 'info');
-      } else {
-        addToast(msg, 'success');
-      }
-      clearSelection();
-    } catch {
-      addToast('Bulk priority update failed', 'error');
-    }
-  };
-
-  const handleBulkArchive = async () => {
-    try {
-      const result = await bulkArchive.mutateAsync({ filenames });
-      const msg = `${result.succeeded.length} plans archived`;
-      if (result.failed.length > 0) {
-        addToast(`${msg}, ${result.failed.length} failed`, 'info');
-      } else {
-        addToast(msg, 'success');
-      }
-      clearSelection();
-    } catch {
-      addToast('Bulk archive failed', 'error');
     }
   };
 
@@ -166,133 +80,6 @@ export function BulkActionBar() {
               </select>
             </div>
           )}
-
-          {/* Priority change */}
-          {fmEnabled && (
-            <div className="flex items-center gap-1">
-              <Flag className="h-3.5 w-3.5 text-muted-foreground" />
-              <select
-                onChange={(e) => {
-                  if (e.target.value) handleBulkPriority(e.target.value as PlanPriority);
-                  e.target.value = '';
-                }}
-                disabled={isPending}
-                className="rounded-md border px-2 py-1 text-xs"
-                defaultValue=""
-              >
-                <option value="" disabled>
-                  Priority...
-                </option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="critical">Critical</option>
-              </select>
-            </div>
-          )}
-
-          {/* Tags */}
-          {fmEnabled &&
-            (showTagInput ? (
-              <div className="flex items-center gap-1">
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  placeholder="tag1, tag2..."
-                  className="rounded-md border px-2 py-1 text-xs w-32"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleBulkTags('add');
-                    if (e.key === 'Escape') setShowTagInput(false);
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => handleBulkTags('add')}
-                  disabled={isPending || !tagInput.trim()}
-                  className="rounded-md border px-2 py-1 text-xs hover:bg-muted disabled:opacity-50"
-                >
-                  Add
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleBulkTags('remove')}
-                  disabled={isPending || !tagInput.trim()}
-                  className="rounded-md border px-2 py-1 text-xs hover:bg-muted disabled:opacity-50"
-                >
-                  Remove
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowTagInput(false)}
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowTagInput(true)}
-                className="flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-muted"
-              >
-                <Tags className="h-3.5 w-3.5" />
-                Tags
-              </button>
-            ))}
-
-          {/* Assign */}
-          {fmEnabled &&
-            (showAssignInput ? (
-              <div className="flex items-center gap-1">
-                <input
-                  type="text"
-                  value={assigneeInput}
-                  onChange={(e) => setAssigneeInput(e.target.value)}
-                  placeholder="Assignee..."
-                  className="rounded-md border px-2 py-1 text-xs w-28"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleBulkAssign();
-                    if (e.key === 'Escape') setShowAssignInput(false);
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleBulkAssign}
-                  disabled={isPending || !assigneeInput.trim()}
-                  className="rounded-md border px-2 py-1 text-xs hover:bg-muted disabled:opacity-50"
-                >
-                  Assign
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAssignInput(false)}
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowAssignInput(true)}
-                className="flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-muted"
-              >
-                <User className="h-3.5 w-3.5" />
-                Assign
-              </button>
-            ))}
-
-          {/* Archive */}
-          <button
-            type="button"
-            onClick={handleBulkArchive}
-            disabled={isPending}
-            className="flex items-center gap-1 rounded-md border px-2 py-1 text-xs hover:bg-muted text-orange-600 border-orange-300"
-          >
-            <Archive className="h-3.5 w-3.5" />
-            Archive
-          </button>
         </div>
       </div>
     </div>

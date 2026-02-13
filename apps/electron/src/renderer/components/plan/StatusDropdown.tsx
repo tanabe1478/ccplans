@@ -1,11 +1,10 @@
-import type { PlanStatus } from '@ccplans/shared';
-import { STATUS_TRANSITIONS } from '@ccplans/shared';
+import { normalizePlanStatus, type PlanStatus, STATUS_TRANSITIONS } from '@ccplans/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '../../lib/utils';
 import { StatusBadge } from './StatusBadge';
 
 interface StatusDropdownProps {
-  currentStatus: PlanStatus | undefined;
+  currentStatus: PlanStatus | string | undefined;
   onStatusChange: (status: PlanStatus) => void;
   disabled?: boolean;
 }
@@ -14,7 +13,7 @@ export function StatusDropdown({ currentStatus, onStatusChange, disabled }: Stat
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const effectiveStatus = currentStatus ?? 'todo';
+  const effectiveStatus = normalizePlanStatus(currentStatus);
 
   const availableStatuses = useMemo(() => {
     return STATUS_TRANSITIONS[effectiveStatus] ?? [];
@@ -32,7 +31,7 @@ export function StatusDropdown({ currentStatus, onStatusChange, disabled }: Stat
   }, []);
 
   const handleSelect = (status: PlanStatus) => {
-    if (status !== currentStatus) {
+    if (status !== effectiveStatus) {
       onStatusChange(status);
     }
     setIsOpen(false);
@@ -54,7 +53,7 @@ export function StatusDropdown({ currentStatus, onStatusChange, disabled }: Stat
               onClick={() => handleSelect(status)}
               className={cn(
                 'w-full rounded px-2 py-1.5 text-left hover:bg-accent',
-                status === currentStatus && 'bg-accent'
+                status === effectiveStatus && 'bg-accent'
               )}
             >
               <StatusBadge status={status} />

@@ -1,4 +1,5 @@
 import type { PlanMeta } from '@ccplans/shared';
+import { normalizePlanStatus } from '@ccplans/shared';
 import { useMemo } from 'react';
 import { usePlanStore } from '../../stores/planStore';
 import { PlanCard } from './PlanCard';
@@ -27,7 +28,9 @@ export function PlanList({ plans, showCheckbox = false }: PlanListProps) {
 
     // Filter by status
     if (statusFilter !== 'all') {
-      result = result.filter((plan) => plan.frontmatter?.status === statusFilter);
+      result = result.filter(
+        (plan) => normalizePlanStatus(plan.frontmatter?.status) === statusFilter
+      );
     }
 
     // Filter by project

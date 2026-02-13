@@ -1,14 +1,4 @@
-import {
-  AlertCircle,
-  Bell,
-  CheckSquare,
-  Clock,
-  Columns,
-  GitBranch,
-  Loader2,
-  Signal,
-  Tag,
-} from 'lucide-react';
+import { AlertCircle, CheckSquare, Clock, Columns, GitBranch, Loader2 } from 'lucide-react';
 import { useSettings, useUpdateSettings } from '@/lib/hooks/useSettings';
 import { useUiStore } from '@/stores/uiStore';
 
@@ -16,10 +6,7 @@ const FRONTMATTER_FEATURES = [
   { icon: CheckSquare, label: 'Status management (ToDo, In Progress, Review, Completed)' },
   { icon: Columns, label: 'Kanban board view' },
   { icon: GitBranch, label: 'Dependency graph between plans' },
-  { icon: Signal, label: 'Priority levels (Low, Medium, High, Critical)' },
-  { icon: Tag, label: 'Tags and bulk tag operations' },
   { icon: CheckSquare, label: 'Subtasks with progress tracking' },
-  { icon: Bell, label: 'Notifications for deadlines and blocked plans' },
   { icon: Clock, label: 'Due date tracking with deadline alerts' },
 ];
 

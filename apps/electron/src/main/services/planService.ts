@@ -9,9 +9,9 @@ import type {
   PlanStatus,
   Subtask,
 } from '@ccplans/shared';
+import { normalizePlanStatus } from '@ccplans/shared';
 import { config } from '../config.js';
 import { ArchiveService } from './archiveService.js';
-import { HistoryService } from './historyService.js';
 import { generatePlanName } from './nameGenerator.js';
 import { SettingsService } from './settingsService.js';
 
@@ -185,7 +185,7 @@ function parseFrontmatter(content: string): {
         frontmatter.sessionId = value;
         break;
       case 'status':
-        frontmatter.status = value as PlanStatus;
+        frontmatter.status = normalizePlanStatus(value);
         break;
       case 'priority':
         frontmatter.priority = value as PlanPriority;
@@ -336,7 +336,6 @@ function extractRelatedProject(content: string): string | undefined {
 
 export interface PlanServiceDependencies {
   archiveService: ArchiveService;
-  historyService: HistoryService;
   settingsService: SettingsService;
   auditLogger?: AuditLogger;
   conflictChecker?: ConflictChecker;
@@ -348,7 +347,6 @@ export class PlanService {
   private archiveDir: string;
   private previewLength: number;
   private archiveService: ArchiveService;
-  private historyService: HistoryService;
   private settingsService: SettingsService;
   private auditLogger?: AuditLogger;
   private conflictChecker?: ConflictChecker;
@@ -359,7 +357,6 @@ export class PlanService {
     this.archiveDir = config.archiveDir;
     this.previewLength = config.previewLength;
     this.archiveService = deps.archiveService;
-    this.historyService = deps.historyService;
     this.settingsService = deps.settingsService;
     this.auditLogger = deps.auditLogger;
     this.conflictChecker = deps.conflictChecker;
@@ -495,10 +492,6 @@ export class PlanService {
       }
     }
 
-    // Save current version before overwriting
-    const currentContent = await readFile(filePath, 'utf-8');
-    await this.historyService.saveVersion(filename, currentContent, 'Content updated');
-
     await writeFile(filePath, content, 'utf-8');
 
     // Audit log (non-blocking)
@@ -566,9 +559,6 @@ export class PlanService {
     this.validateFilename(filename);
     const filePath = join(this.plansDir, filename);
     const content = await readFile(filePath, 'utf-8');
-
-    // Save current version before status change
-    await this.historyService.saveVersion(filename, content, `Status changed to ${status}`);
 
     const { frontmatter, body } = parseFrontmatter(content);
     const previousStatus = frontmatter?.status ?? 'todo';
@@ -650,11 +640,6 @@ const defaultArchiveService = new ArchiveService({
   archiveRetentionDays: config.archiveRetentionDays,
 });
 
-const defaultHistoryService = new HistoryService({
-  plansDir: config.plansDir,
-  historyDir: `${config.plansDir}/.history`,
-});
-
 const defaultSettingsService = new SettingsService({
   plansDir: config.plansDir,
 });
@@ -667,7 +652,6 @@ export const planService = new PlanService(
   },
   {
     archiveService: defaultArchiveService,
-    historyService: defaultHistoryService,
     settingsService: defaultSettingsService,
     auditLogger: undefined,
     conflictChecker: undefined,

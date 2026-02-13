@@ -1,5 +1,3 @@
-export { ArchivePage } from './ArchivePage';
-export { BackupPage } from './BackupPage';
 export { DependencyPage } from './DependencyPage';
 export { HomePage } from './HomePage';
 export { KanbanPage } from './KanbanPage';

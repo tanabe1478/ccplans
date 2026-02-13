@@ -11,9 +11,9 @@ export function ReviewToolbar({ commentCount, onCopyAllPrompts, onClearAll }: Re
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   return (
-    <div className="flex items-center gap-4 rounded-lg border bg-card px-4 py-2">
-      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <MessageSquare className="h-4 w-4" />
+    <div className="flex items-center gap-3 border border-slate-800 bg-slate-900/70 px-3 py-2">
+      <div className="flex items-center gap-1.5 text-[12px] text-slate-400">
+        <MessageSquare className="h-3.5 w-3.5" />
         <span>
           {commentCount} comment{commentCount !== 1 ? 's' : ''}
         </span>
@@ -24,7 +24,7 @@ export function ReviewToolbar({ commentCount, onCopyAllPrompts, onClearAll }: Re
           type="button"
           onClick={onCopyAllPrompts}
           disabled={commentCount === 0}
-          className="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-1.5 border border-slate-700 px-2 py-1 text-[11px] text-slate-300 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Copy className="h-3.5 w-3.5" />
           Copy All Prompts
@@ -32,21 +32,21 @@ export function ReviewToolbar({ commentCount, onCopyAllPrompts, onClearAll }: Re
 
         {showClearConfirm ? (
           <div className="flex items-center gap-1">
-            <span className="text-xs text-destructive">Clear all?</span>
+            <span className="text-[11px] text-rose-300">Clear all?</span>
             <button
               type="button"
               onClick={() => {
                 onClearAll();
                 setShowClearConfirm(false);
               }}
-              className="rounded bg-destructive px-2 py-1 text-xs text-destructive-foreground hover:opacity-80"
+              className="border border-slate-700 bg-rose-500/20 px-2 py-1 text-[11px] text-rose-200 hover:bg-rose-500/30"
             >
               Yes
             </button>
             <button
               type="button"
               onClick={() => setShowClearConfirm(false)}
-              className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted"
+              className="border border-slate-700 px-2 py-1 text-[11px] text-slate-400 hover:bg-slate-800"
             >
               No
             </button>
@@ -56,7 +56,7 @@ export function ReviewToolbar({ commentCount, onCopyAllPrompts, onClearAll }: Re
             type="button"
             onClick={() => setShowClearConfirm(true)}
             disabled={commentCount === 0}
-            className="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium text-destructive hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 border border-slate-700 px-2 py-1 text-[11px] text-rose-300 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Trash2 className="h-3.5 w-3.5" />
             Clear All

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { PlanFrontmatter, Subtask } from '@ccplans/shared';
+import { normalizePlanStatus, type PlanFrontmatter, type Subtask } from '@ccplans/shared';
 import { config } from '../config.js';
 
 // Re-use the parsing/serialization from planService via a shared approach
@@ -129,9 +129,7 @@ function parseFrontmatter(content: string): { frontmatter: PlanFrontmatter; body
         frontmatter.sessionId = value;
         break;
       case 'status':
-        if (['todo', 'in_progress', 'review', 'completed'].includes(value)) {
-          frontmatter.status = value as PlanFrontmatter['status'];
-        }
+        frontmatter.status = normalizePlanStatus(value);
         break;
       case 'priority':
         if (['low', 'medium', 'high', 'critical'].includes(value)) {

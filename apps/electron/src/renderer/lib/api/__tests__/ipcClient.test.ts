@@ -56,13 +56,13 @@ describe('ipcClient', () => {
       });
     });
 
-    it('should call plans:delete channel with filename and archive flag', async () => {
+    it('should call plans:delete channel with filename', async () => {
       const { ipcClient } = await import('../ipcClient');
       mockInvoke.mockResolvedValueOnce(undefined);
 
-      await ipcClient.plans.delete('test.md', false);
+      await ipcClient.plans.delete('test.md');
 
-      expect(mockInvoke).toHaveBeenCalledWith('plans:delete', 'test.md', false);
+      expect(mockInvoke).toHaveBeenCalledWith('plans:delete', 'test.md');
     });
 
     it('should call plans:updateStatus channel with request object', async () => {
@@ -74,19 +74,6 @@ describe('ipcClient', () => {
       expect(mockInvoke).toHaveBeenCalledWith('plans:updateStatus', {
         filename: 'test.md',
         status: 'in_progress',
-      });
-    });
-
-    it('should call plans:bulkTags channel with action', async () => {
-      const { ipcClient } = await import('../ipcClient');
-      mockInvoke.mockResolvedValueOnce({ succeeded: ['test.md'], failed: [] });
-
-      await ipcClient.plans.bulkTags(['test.md'], 'remove', ['api']);
-
-      expect(mockInvoke).toHaveBeenCalledWith('plans:bulkTags', {
-        filenames: ['test.md'],
-        action: 'remove',
-        tags: ['api'],
       });
     });
   });
@@ -108,36 +95,6 @@ describe('ipcClient', () => {
       await ipcClient.search.query('test query', 10);
 
       expect(mockInvoke).toHaveBeenCalledWith('search:query', 'test query', 10);
-    });
-  });
-
-  describe('views', () => {
-    it('should call views:list channel', async () => {
-      const { ipcClient } = await import('../ipcClient');
-      mockInvoke.mockResolvedValueOnce([]);
-
-      await ipcClient.views.list();
-
-      expect(mockInvoke).toHaveBeenCalledWith('views:list');
-    });
-
-    it('should call views:create channel with data', async () => {
-      const { ipcClient } = await import('../ipcClient');
-      mockInvoke.mockResolvedValueOnce({ id: 'view-1' });
-
-      await ipcClient.views.create({
-        name: 'Test View',
-        filters: {},
-        sortBy: 'filename',
-        sortOrder: 'asc',
-      });
-
-      expect(mockInvoke).toHaveBeenCalledWith('views:create', {
-        name: 'Test View',
-        filters: {},
-        sortBy: 'filename',
-        sortOrder: 'asc',
-      });
     });
   });
 

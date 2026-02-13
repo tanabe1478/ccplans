@@ -1,8 +1,8 @@
-import type { PlanStatus } from '@ccplans/shared';
+import { normalizePlanStatus, type PlanStatus } from '@ccplans/shared';
 import { cn } from '../../lib/utils';
 
 interface StatusBadgeProps {
-  status: PlanStatus | undefined;
+  status: PlanStatus | string | undefined;
   onClick?: () => void;
   interactive?: boolean;
 }
@@ -29,7 +29,8 @@ const statusConfig: Record<PlanStatus, { label: string; className: string }> = {
 export function StatusBadge({ status, onClick, interactive = false }: StatusBadgeProps) {
   if (!status) return null;
 
-  const config = statusConfig[status];
+  const normalizedStatus = normalizePlanStatus(status);
+  const config = statusConfig[normalizedStatus];
   const baseClassName = cn(
     'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
     config.className,

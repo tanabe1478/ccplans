@@ -93,17 +93,7 @@
   },
   "overrides": [
     {
-      "includes": ["apps/api/**"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noConsole": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["e2e/**"],
+      "includes": ["apps/electron/e2e/**"],
       "linter": {
         "rules": {
           "suspicious": {

@@ -6,6 +6,7 @@ Object.defineProperty(window, 'electronAPI', {
   value: {
     invoke: vi.fn(),
     on: vi.fn(() => vi.fn()),
+    writeClipboard: vi.fn(),
   },
   writable: true,
 });

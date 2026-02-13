@@ -2,14 +2,14 @@
  * React Query hooks for plans operations via IPC
  */
 
-import type { ExportFormat, PlanPriority, PlanStatus, SubtaskActionRequest } from '@ccplans/shared';
+import type { PlanStatus, SubtaskActionRequest } from '@ccplans/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ipcClient } from '../api/ipcClient';
 import { useSettings } from './useSettings';
 
 export function usePlans() {
   const { data: settings, isLoading: isSettingsLoading } = useSettings();
-  const frontmatterEnabled = settings?.frontmatterEnabled ?? false;
+  const frontmatterEnabled = settings?.frontmatterEnabled ?? true;
 
   return useQuery({
     queryKey: ['plans', frontmatterEnabled],
@@ -20,7 +20,7 @@ export function usePlans() {
 
 export function usePlan(filename: string) {
   const { data: settings, isLoading: isSettingsLoading } = useSettings();
-  const frontmatterEnabled = settings?.frontmatterEnabled ?? false;
+  const frontmatterEnabled = settings?.frontmatterEnabled ?? true;
 
   return useQuery({
     queryKey: ['plan', filename, frontmatterEnabled],
@@ -58,8 +58,7 @@ export function useDeletePlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ filename, archive = true }: { filename: string; archive?: boolean }) =>
-      ipcClient.plans.delete(filename, archive),
+    mutationFn: ({ filename }: { filename: string }) => ipcClient.plans.delete(filename),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plans'] });
     },
@@ -70,8 +69,7 @@ export function useBulkDelete() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ filenames, archive = true }: { filenames: string[]; archive?: boolean }) =>
-      ipcClient.plans.bulkDelete(filenames, archive),
+    mutationFn: ({ filenames }: { filenames: string[] }) => ipcClient.plans.bulkDelete(filenames),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plans'] });
     },
@@ -116,12 +114,6 @@ export function useAvailableTransitions(filename: string) {
     queryFn: () => ipcClient.plans.availableTransitions(filename),
     enabled: !!filename,
   });
-}
-
-export function useExportPlan() {
-  return {
-    export: (filename: string, format: ExportFormat) => ipcClient.plans.export(filename, format),
-  };
 }
 
 // Subtask hooks
@@ -209,60 +201,6 @@ export function useBulkUpdateStatus() {
   return useMutation({
     mutationFn: ({ filenames, status }: { filenames: string[]; status: PlanStatus }) =>
       ipcClient.plans.bulkStatus(filenames, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plans'] });
-    },
-  });
-}
-
-export function useBulkUpdateTags() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      filenames,
-      action,
-      tags,
-    }: {
-      filenames: string[];
-      action: 'add' | 'remove' | 'set';
-      tags: string[];
-    }) => ipcClient.plans.bulkTags(filenames, action, tags),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plans'] });
-    },
-  });
-}
-
-export function useBulkUpdateAssign() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ filenames, assignee }: { filenames: string[]; assignee: string }) =>
-      ipcClient.plans.bulkAssign(filenames, assignee),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plans'] });
-    },
-  });
-}
-
-export function useBulkUpdatePriority() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ filenames, priority }: { filenames: string[]; priority: PlanPriority }) =>
-      ipcClient.plans.bulkPriority(filenames, priority),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plans'] });
-    },
-  });
-}
-
-export function useBulkArchive() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ filenames }: { filenames: string[] }) => ipcClient.plans.bulkArchive(filenames),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['plans'] });
     },
