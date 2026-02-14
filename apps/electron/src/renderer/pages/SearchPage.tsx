@@ -307,7 +307,7 @@ function rebuildQueryWithStatuses(
   const statusExpr = buildStatusExpression(statuses);
   if (!base) return statusExpr;
   if (!statusExpr) return base;
-  return `${base} AND ${statusExpr}`;
+  return `${base} AND (${statusExpr})`;
 }
 
 function highlightMatch(text: string, query: string): string {

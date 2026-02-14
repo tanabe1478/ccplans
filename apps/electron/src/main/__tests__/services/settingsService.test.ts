@@ -20,5 +20,15 @@ describe('settingsService', () => {
       expect(typeof service.getPlanDirectories).toBe('function');
       expect(typeof service.resetSettingsCache).toBe('function');
     });
+
+    it('should return configured plan directories via getPlanDirectories', async () => {
+      const service = new SettingsService({ plansDir: '/tmp/test-plans' });
+      await service.updateSettings({
+        planDirectories: ['/tmp/test-plans', '/tmp/secondary-plans'],
+      });
+
+      const directories = await service.getPlanDirectories();
+      expect(directories).toEqual(['/tmp/test-plans', '/tmp/secondary-plans']);
+    });
   });
 });

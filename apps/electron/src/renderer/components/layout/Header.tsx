@@ -54,7 +54,11 @@ function RouteTabs() {
 
 export function Header({ onOpenCommandPalette, onOpenQuickOpen }: HeaderProps) {
   const { theme, setTheme } = useUiStore();
-  const hasMacTrafficLights = typeof navigator !== 'undefined' && /mac/i.test(navigator.userAgent);
+  const platform = typeof window !== 'undefined' ? window.electronAPI?.getPlatform?.() : undefined;
+  const hasMacTrafficLights =
+    platform != null
+      ? platform === 'darwin'
+      : typeof navigator !== 'undefined' && /mac/i.test(navigator.userAgent);
   const macLeftInsetClass = hasMacTrafficLights ? 'pl-[84px]' : '';
 
   return (

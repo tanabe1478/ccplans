@@ -45,21 +45,31 @@ export function SettingsPage() {
   const frontmatterHeadingId = useId();
   const [directoryEntries, setDirectoryEntries] = useState<DirectoryEntry[]>([]);
   const [pickingDirectoryId, setPickingDirectoryId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const directories = settings?.planDirectories ?? [];
-    const source = directories.length > 0 ? directories : [DEFAULT_PLAN_DIRECTORY];
-    setDirectoryEntries(source.map((path) => createDirectoryEntry(path)));
-  }, [settings?.planDirectories]);
-
-  const normalizedDirectories = Array.from(
-    new Set(directoryEntries.map((entry) => entry.path.trim()).filter(Boolean))
-  );
   const savedDirectories =
     settings?.planDirectories && settings.planDirectories.length > 0
       ? settings.planDirectories
       : [DEFAULT_PLAN_DIRECTORY];
+  const normalizedDirectories = Array.from(
+    new Set(directoryEntries.map((entry) => entry.path.trim()).filter(Boolean))
+  );
   const hasDirectoryChanges = normalizedDirectories.join('\n') !== savedDirectories.join('\n');
+
+  useEffect(() => {
+    if (hasDirectoryChanges && directoryEntries.length > 0) return;
+
+    const directories = settings?.planDirectories ?? [];
+    const source = directories.length > 0 ? directories : [DEFAULT_PLAN_DIRECTORY];
+
+    setDirectoryEntries((current) => {
+      const currentPaths = current.map((entry) => entry.path);
+      const isSame =
+        currentPaths.length === source.length &&
+        currentPaths.every((path, index) => path === source[index]);
+
+      if (isSame) return current;
+      return source.map((path) => createDirectoryEntry(path));
+    });
+  }, [settings?.planDirectories, hasDirectoryChanges, directoryEntries.length]);
 
   if (isLoading) {
     return (

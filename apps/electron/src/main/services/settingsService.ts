@@ -2,12 +2,10 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import type { AppSettings } from '@ccplans/shared';
-import { DEFAULT_SETTINGS } from '@ccplans/shared';
 import { config } from '../config.js';
 
 const SETTINGS_FILENAME = '.settings.json';
 const ELECTRON_DEFAULT_SETTINGS: AppSettings = {
-  ...DEFAULT_SETTINGS,
   frontmatterEnabled: true,
   planDirectories: [config.plansDir],
 };
@@ -126,4 +124,19 @@ export async function getPlanDirectories(): Promise<string[]> {
 
 export function resetSettingsCache(): void {
   defaultSettingsService.resetSettingsCache();
+}
+
+export async function selectPlanDirectory(initialPath?: string): Promise<string | null> {
+  const { dialog } = await import('electron');
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Select Plan Directory',
+    defaultPath: initialPath?.trim() ? initialPath : undefined,
+    properties: ['openDirectory', 'createDirectory', 'dontAddToRecent'],
+  });
+
+  if (canceled || filePaths.length === 0) {
+    return null;
+  }
+
+  return filePaths[0] ?? null;
 }

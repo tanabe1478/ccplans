@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { mkdir, readdir, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type {
@@ -42,6 +41,35 @@ export interface PlanServiceConfig {
   plansDir: string;
   archiveDir: string;
   previewLength: number;
+}
+
+class PlanConflictError extends Error {
+  readonly conflict = true;
+  readonly statusCode = 409;
+  readonly lastKnown: number | undefined;
+  readonly current: number | undefined;
+
+  constructor(lastKnown: number | undefined, current: number | undefined) {
+    super('File was modified externally');
+    this.name = 'PlanConflictError';
+    this.lastKnown = lastKnown;
+    this.current = current;
+  }
+}
+
+function isPlanPriority(value: string): value is PlanPriority {
+  return ['low', 'medium', 'high', 'critical'].includes(value);
+}
+
+function buildSubtask(candidate: Partial<Subtask>): Subtask | null {
+  if (!candidate.id || !candidate.title) return null;
+  return {
+    id: candidate.id,
+    title: candidate.title,
+    status: candidate.status ?? 'todo',
+    assignee: candidate.assignee,
+    dueDate: candidate.dueDate,
+  };
 }
 
 /**
@@ -98,8 +126,9 @@ function parseSubtasks(
     const propMatch = line.match(/^\s{4,}(\w+):\s*(.*)$/);
 
     if (itemMatch) {
-      if (current?.id && current.title) {
-        subtasks.push(current as Subtask);
+      const built = current ? buildSubtask(current) : null;
+      if (built) {
+        subtasks.push(built);
       }
       current = {};
       const key = itemMatch[1];
@@ -124,8 +153,9 @@ function parseSubtasks(
     }
   }
 
-  if (current?.id && current.title) {
-    subtasks.push(current as Subtask);
+  const built = current ? buildSubtask(current) : null;
+  if (built) {
+    subtasks.push(built);
   }
 
   return { subtasks, consumed };
@@ -188,7 +218,9 @@ function parseFrontmatter(content: string): {
         frontmatter.status = normalizePlanStatus(value);
         break;
       case 'priority':
-        frontmatter.priority = value as PlanPriority;
+        if (isPlanPriority(value)) {
+          frontmatter.priority = value;
+        }
         break;
       case 'dueDate':
         frontmatter.dueDate = value;
@@ -478,9 +510,7 @@ export class PlanService {
     // Auto-migrate if needed
     if (this.migrationHandler) {
       if (frontmatter && this.migrationHandler.needsMigration(frontmatter)) {
-        frontmatter = this.migrationHandler.migrate(
-          frontmatter as unknown as Record<string, unknown>
-        );
+        frontmatter = this.migrationHandler.migrate({ ...frontmatter });
       } else if (!frontmatter) {
         frontmatter = this.migrationHandler.migrate({});
       }
@@ -533,17 +563,7 @@ export class PlanService {
     if (this.conflictChecker) {
       const conflict = await this.conflictChecker.checkConflict(filename, planDirectory);
       if (conflict.hasConflict) {
-        const err = new Error('File was modified externally') as Error & {
-          conflict: boolean;
-          statusCode: number;
-          lastKnown: number | undefined;
-          current: number | undefined;
-        };
-        err.conflict = true;
-        err.statusCode = 409;
-        err.lastKnown = conflict.lastKnownMtime;
-        err.current = conflict.currentMtime;
-        throw err;
+        throw new PlanConflictError(conflict.lastKnownMtime, conflict.currentMtime);
       }
     }
 

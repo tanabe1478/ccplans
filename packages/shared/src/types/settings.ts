@@ -9,14 +9,6 @@ export interface AppSettings {
 }
 
 /**
- * Default settings - frontmatter is disabled by default
- */
-export const DEFAULT_SETTINGS: AppSettings = {
-  frontmatterEnabled: false,
-  planDirectories: [],
-};
-
-/**
  * GET /api/settings response
  */
 export type GetSettingsResponse = AppSettings;

@@ -1,20 +1,15 @@
-import { BrowserWindow, dialog } from 'electron';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getSettings, updateSettings } from '../../services/settingsService.js';
+import {
+  getSettings,
+  selectPlanDirectory,
+  updateSettings,
+} from '../../services/settingsService.js';
 import { registerSettingsHandlers } from '../settings.js';
-
-vi.mock('electron', () => ({
-  dialog: {
-    showOpenDialog: vi.fn(),
-  },
-  BrowserWindow: {
-    fromWebContents: vi.fn(),
-  },
-}));
 
 vi.mock('../../services/settingsService.js', () => ({
   getSettings: vi.fn(),
   updateSettings: vi.fn(),
+  selectPlanDirectory: vi.fn(),
 }));
 
 describe('Settings IPC Handlers', () => {
@@ -93,22 +88,13 @@ describe('Settings IPC Handlers', () => {
   });
 
   it('should return selected directory path from settings:selectDirectory', async () => {
-    vi.mocked(BrowserWindow.fromWebContents).mockReturnValue(undefined as never);
-    vi.mocked(dialog.showOpenDialog).mockResolvedValueOnce({
-      canceled: false,
-      filePaths: ['/tmp/selected-plans'],
-      bookmarks: [],
-    });
+    vi.mocked(selectPlanDirectory).mockResolvedValueOnce('/tmp/selected-plans');
     const handler = getRegisteredHandler('settings:selectDirectory');
 
     expect(handler).toBeDefined();
-    const result = await handler?.({ sender: {} } as never, '/tmp/current');
+    const result = await handler?.({} as never, '/tmp/current');
 
-    expect(dialog.showOpenDialog).toHaveBeenCalledWith(undefined, {
-      title: 'Select Plan Directory',
-      defaultPath: '/tmp/current',
-      properties: ['openDirectory', 'createDirectory', 'dontAddToRecent'],
-    });
+    expect(selectPlanDirectory).toHaveBeenCalledWith('/tmp/current');
     expect(result).toEqual('/tmp/selected-plans');
   });
 });
