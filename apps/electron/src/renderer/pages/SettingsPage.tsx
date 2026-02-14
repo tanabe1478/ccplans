@@ -38,6 +38,11 @@ function createDirectoryEntry(path = ''): DirectoryEntry {
   };
 }
 
+function toDirectoryEntries(paths: string[] | undefined): DirectoryEntry[] {
+  const source = paths && paths.length > 0 ? paths : [DEFAULT_PLAN_DIRECTORY];
+  return source.map((path) => createDirectoryEntry(path));
+}
+
 export function SettingsPage() {
   const { data: settings, isLoading, error } = useSettings();
   const updateSettings = useUpdateSettings();
@@ -91,7 +96,8 @@ export function SettingsPage() {
   const handleToggle = async () => {
     const newValue = !settings?.frontmatterEnabled;
     try {
-      await updateSettings.mutateAsync({ frontmatterEnabled: newValue });
+      const updated = await updateSettings.mutateAsync({ frontmatterEnabled: newValue });
+      setDirectoryEntries(toDirectoryEntries(updated.planDirectories));
       addToast(
         newValue ? 'Frontmatter features enabled' : 'Frontmatter features disabled',
         'success'
@@ -136,7 +142,8 @@ export function SettingsPage() {
     }
 
     try {
-      await updateSettings.mutateAsync({ planDirectories: normalizedDirectories });
+      const updated = await updateSettings.mutateAsync({ planDirectories: normalizedDirectories });
+      setDirectoryEntries(toDirectoryEntries(updated.planDirectories));
       addToast('Plan directories updated', 'success');
     } catch {
       addToast('Failed to update plan directories', 'error');

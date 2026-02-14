@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import type { AppSettings } from '@ccplans/shared';
 import { config } from '../config.js';
 
@@ -34,15 +34,21 @@ export class SettingsService {
     return resolve(trimmed);
   }
 
+  private isDirectoryWithinBase(path: string, base: string): boolean {
+    const rel = relative(base, path);
+    return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
+  }
+
   private normalizePlanDirectories(value: unknown): string[] {
     const baseFallback = this.normalizeDirectory(this.plansDir);
     const raw = Array.isArray(value) ? value : [];
     const normalized = raw
       .filter((item): item is string => typeof item === 'string')
       .map((item) => this.normalizeDirectory(item))
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((item) => this.isDirectoryWithinBase(item, baseFallback));
     const unique = Array.from(new Set(normalized));
-    return unique.length > 0 ? unique : [baseFallback];
+    return [baseFallback, ...unique.filter((item) => item !== baseFallback)];
   }
 
   private sanitizeSettings(parsed: Partial<AppSettings>): AppSettings {
@@ -89,7 +95,7 @@ export class SettingsService {
 
   async getPlanDirectories(): Promise<string[]> {
     const settings = await this.getSettings();
-    return settings.planDirectories;
+    return this.normalizePlanDirectories(settings.planDirectories);
   }
 
   /** Reset cache (for testing) */

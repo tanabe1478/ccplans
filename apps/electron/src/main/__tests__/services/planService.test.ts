@@ -22,7 +22,7 @@ describe('PlanService', () => {
   beforeEach(async () => {
     tempDir = join(tmpdir(), `ccplans-test-${Date.now()}`);
     plansDir = join(tempDir, 'plans');
-    secondaryPlansDir = join(tempDir, 'plans-secondary');
+    secondaryPlansDir = join(plansDir, 'secondary');
     archiveDir = join(tempDir, 'archive');
     await mkdir(plansDir, { recursive: true });
     await mkdir(secondaryPlansDir, { recursive: true });

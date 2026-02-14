@@ -114,7 +114,7 @@ describe('SearchService', () => {
     });
 
     it('should search across multiple configured directories', async () => {
-      const secondaryDir = join(tempDir, 'secondary');
+      const secondaryDir = join(plansDir, 'secondary');
       await mkdir(secondaryDir, { recursive: true });
 
       const settingsService = new SettingsService({ plansDir });

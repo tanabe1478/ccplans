@@ -24,11 +24,11 @@ describe('settingsService', () => {
     it('should return configured plan directories via getPlanDirectories', async () => {
       const service = new SettingsService({ plansDir: '/tmp/test-plans' });
       await service.updateSettings({
-        planDirectories: ['/tmp/test-plans', '/tmp/secondary-plans'],
+        planDirectories: ['/tmp/test-plans', '/tmp/test-plans/secondary-plans'],
       });
 
       const directories = await service.getPlanDirectories();
-      expect(directories).toEqual(['/tmp/test-plans', '/tmp/secondary-plans']);
+      expect(directories).toEqual(['/tmp/test-plans', '/tmp/test-plans/secondary-plans']);
     });
   });
 });

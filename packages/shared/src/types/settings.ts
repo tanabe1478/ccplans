@@ -5,7 +5,7 @@ export interface AppSettings {
   /** Enable YAML frontmatter features (status, priority, tags, subtasks, etc.) */
   frontmatterEnabled: boolean;
   /** Directories to scan for markdown plans */
-  planDirectories: string[];
+  planDirectories?: string[];
 }
 
 /**
