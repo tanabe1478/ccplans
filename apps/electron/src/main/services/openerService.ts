@@ -148,15 +148,10 @@ export class OpenerService {
 
     if (platform() === 'darwin') {
       return new Promise((resolve, reject) => {
-        const command = `cd -- '${targetDir.replace(/'/g, `'\\''`)}' && exec zsh`;
-        const childProcess = spawn(
-          'open',
-          ['-na', 'Ghostty', '--args', '-e', 'zsh', '-lc', command],
-          {
-            detached: true,
-            stdio: 'ignore',
-          }
-        );
+        const childProcess = spawn('open', ['-a', 'Ghostty', targetDir], {
+          detached: true,
+          stdio: 'ignore',
+        });
 
         childProcess.on('error', (err) => {
           reject(new Error(`Failed to open Ghostty: ${err.message}`));
