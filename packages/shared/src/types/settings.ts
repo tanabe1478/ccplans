@@ -11,36 +11,16 @@ export type ShortcutAction =
 export type AppShortcuts = Record<ShortcutAction, string>;
 
 /**
- * Default keyboard shortcuts
- */
-export const DEFAULT_SHORTCUTS: AppShortcuts = {
-  openCommandPalette: 'Mod+K',
-  openQuickOpen: 'Mod+P',
-  commandGoHome: 'Mod+1',
-  commandGoSearch: 'Mod+2',
-  commandOpenSettings: 'Mod+,',
-  commandToggleTheme: 'Mod+Shift+T',
-  commandOpenQuickOpen: 'Mod+Shift+P',
-  commandOpenCurrentReview: 'Mod+Shift+R',
-};
-
-/**
  * Application settings
  */
 export interface AppSettings {
   /** Enable YAML frontmatter features (status, priority, tags, subtasks, etc.) */
   frontmatterEnabled: boolean;
+  /** Directories to scan for markdown plans */
+  planDirectories?: string[];
   /** Keyboard shortcuts for app actions */
-  shortcuts: AppShortcuts;
+  shortcuts?: AppShortcuts;
 }
-
-/**
- * Default settings - frontmatter is disabled by default
- */
-export const DEFAULT_SETTINGS: AppSettings = {
-  frontmatterEnabled: false,
-  shortcuts: DEFAULT_SHORTCUTS,
-};
 
 /**
  * GET /api/settings response

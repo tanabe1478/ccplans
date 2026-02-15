@@ -15,6 +15,7 @@ import type {
   CreatePlanRequest,
   DependencyGraphResponse,
   ExportFormat,
+  ExternalApp,
   GetSettingsResponse,
   ImportMarkdownRequest,
   ImportMarkdownResponse,
@@ -37,6 +38,7 @@ interface ElectronAPI {
   invoke: (channel: string, ...args: unknown[]) => Promise<unknown>;
   on: (channel: string, callback: (...args: unknown[]) => void) => () => void;
   writeClipboard?: (text: string) => void;
+  getPlatform?: () => NodeJS.Platform;
 }
 
 declare global {
@@ -82,7 +84,7 @@ export const ipcClient = {
     rename: (filename: string, newFilename: string): Promise<PlanMeta> =>
       invoke<PlanMeta>('plans:rename', { filename, newFilename } as RenamePlanRequest),
 
-    open: (filename: string, app: 'vscode' | 'terminal' | 'default'): Promise<void> =>
+    open: (filename: string, app: ExternalApp): Promise<void> =>
       invoke<void>('plans:open', filename, app),
 
     updateStatus: (filename: string, status: PlanStatus): Promise<PlanMeta> =>
@@ -193,6 +195,9 @@ export const ipcClient = {
 
     update: (data: UpdateSettingsRequest): Promise<UpdateSettingsResponse> =>
       invoke<UpdateSettingsResponse>('settings:update', data),
+
+    selectDirectory: (initialPath?: string): Promise<string | null> =>
+      invoke<string | null>('settings:selectDirectory', initialPath),
   },
 };
 

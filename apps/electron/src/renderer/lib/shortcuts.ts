@@ -146,8 +146,10 @@ export function matchesShortcut(event: KeyboardEvent, shortcut: string): boolean
     return false;
   }
 
+  const macOS = isMacOS();
   const requiresMod = parsed.modifiers.has('Mod');
-  if (requiresMod && !event.metaKey && !event.ctrlKey) {
+  const modPressed = macOS ? event.metaKey : event.ctrlKey;
+  if (requiresMod && !modPressed) {
     return false;
   }
 
@@ -156,8 +158,8 @@ export function matchesShortcut(event: KeyboardEvent, shortcut: string): boolean
   if (parsed.modifiers.has('Alt') && !event.altKey) return false;
   if (parsed.modifiers.has('Shift') && !event.shiftKey) return false;
 
-  const allowsMeta = parsed.modifiers.has('Meta') || requiresMod;
-  const allowsCtrl = parsed.modifiers.has('Ctrl') || requiresMod;
+  const allowsMeta = parsed.modifiers.has('Meta') || (requiresMod && macOS);
+  const allowsCtrl = parsed.modifiers.has('Ctrl') || (requiresMod && !macOS);
   if (event.metaKey && !allowsMeta) return false;
   if (event.ctrlKey && !allowsCtrl) return false;
   if (event.altKey && !parsed.modifiers.has('Alt')) return false;

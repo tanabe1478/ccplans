@@ -78,4 +78,3 @@ export type {
   UpdateSettingsRequest,
   UpdateSettingsResponse,
 } from './types/settings.js';
-export { DEFAULT_SETTINGS, DEFAULT_SHORTCUTS } from './types/settings.js';

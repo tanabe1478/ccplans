@@ -1,5 +1,6 @@
-import { type AppShortcuts, DEFAULT_SHORTCUTS } from '@ccplans/shared';
+import type { AppShortcuts } from '@ccplans/shared';
 import { createContext, type ReactNode, useContext } from 'react';
+import { DEFAULT_SHORTCUTS } from '../../shared/shortcutDefaults';
 import { useSettings } from '../lib/hooks/useSettings';
 
 interface SettingsContextValue {
