@@ -108,7 +108,7 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
         <div className="relative">
           <Button
             variant="outline"
-            size="icon"
+            size="default"
             onClick={() => {
               setShowOpenMenu(!showOpenMenu);
               setShowMenu(false);
@@ -116,7 +116,8 @@ export function PlanActions({ filename, title, onDeleted }: PlanActionsProps) {
             title="Open in external app"
             aria-label="Open in external app"
           >
-            <ExternalLink className="h-4 w-4" />
+            <ExternalLink className="h-4 w-4 mr-1.5" />
+            Open in...
           </Button>
 
           {showOpenMenu && (
