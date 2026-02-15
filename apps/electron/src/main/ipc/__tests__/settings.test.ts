@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_SHORTCUTS } from '../../../shared/shortcutDefaults.js';
 import {
   getSettings,
   selectPlanDirectory,
@@ -51,6 +52,7 @@ describe('Settings IPC Handlers', () => {
     vi.mocked(getSettings).mockResolvedValueOnce({
       frontmatterEnabled: true,
       planDirectories: ['/tmp/test-plans'],
+      shortcuts: DEFAULT_SHORTCUTS,
     });
     const handler = getRegisteredHandler('settings:get');
 
@@ -61,6 +63,7 @@ describe('Settings IPC Handlers', () => {
     expect(result).toEqual({
       frontmatterEnabled: true,
       planDirectories: ['/tmp/test-plans'],
+      shortcuts: DEFAULT_SHORTCUTS,
     });
   });
 
@@ -68,6 +71,7 @@ describe('Settings IPC Handlers', () => {
     vi.mocked(updateSettings).mockResolvedValueOnce({
       frontmatterEnabled: false,
       planDirectories: ['/tmp/updated-plans'],
+      shortcuts: DEFAULT_SHORTCUTS,
     });
     const handler = getRegisteredHandler('settings:update');
 
@@ -84,6 +88,7 @@ describe('Settings IPC Handlers', () => {
     expect(result).toEqual({
       frontmatterEnabled: false,
       planDirectories: ['/tmp/updated-plans'],
+      shortcuts: DEFAULT_SHORTCUTS,
     });
   });
 

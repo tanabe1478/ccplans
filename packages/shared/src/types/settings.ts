@@ -1,3 +1,15 @@
+export type ShortcutAction =
+  | 'openCommandPalette'
+  | 'openQuickOpen'
+  | 'commandGoHome'
+  | 'commandGoSearch'
+  | 'commandOpenSettings'
+  | 'commandToggleTheme'
+  | 'commandOpenQuickOpen'
+  | 'commandOpenCurrentReview';
+
+export type AppShortcuts = Record<ShortcutAction, string>;
+
 /**
  * Application settings
  */
@@ -6,6 +18,8 @@ export interface AppSettings {
   frontmatterEnabled: boolean;
   /** Directories to scan for markdown plans */
   planDirectories?: string[];
+  /** Keyboard shortcuts for app actions */
+  shortcuts?: AppShortcuts;
 }
 
 /**

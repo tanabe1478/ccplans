@@ -2,12 +2,14 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import type { AppSettings } from '@ccplans/shared';
+import { DEFAULT_SHORTCUTS, mergeShortcuts } from '../../shared/shortcutDefaults.js';
 import { config } from '../config.js';
 
 const SETTINGS_FILENAME = '.settings.json';
 const ELECTRON_DEFAULT_SETTINGS: AppSettings = {
   frontmatterEnabled: true,
   planDirectories: [config.plansDir],
+  shortcuts: DEFAULT_SHORTCUTS,
 };
 
 export interface SettingsServiceConfig {
@@ -56,6 +58,7 @@ export class SettingsService {
       ...ELECTRON_DEFAULT_SETTINGS,
       ...parsed,
       planDirectories: this.normalizePlanDirectories(parsed.planDirectories),
+      shortcuts: mergeShortcuts(parsed.shortcuts),
     };
   }
 
@@ -78,7 +81,14 @@ export class SettingsService {
 
   async updateSettings(partial: Partial<AppSettings>): Promise<AppSettings> {
     const current = await this.getSettings();
-    const updated: AppSettings = this.sanitizeSettings({ ...current, ...partial });
+    const updated: AppSettings = this.sanitizeSettings({
+      ...current,
+      ...partial,
+      shortcuts: mergeShortcuts({
+        ...(current.shortcuts ?? {}),
+        ...(partial.shortcuts ?? {}),
+      }),
+    });
 
     const settingsPath = this.getSettingsPath();
     await mkdir(dirname(settingsPath), { recursive: true });

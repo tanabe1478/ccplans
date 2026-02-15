@@ -1,3 +1,4 @@
+import type { AppShortcuts, ShortcutAction } from '@ccplans/shared';
 import {
   AlertCircle,
   CheckSquare,
@@ -6,15 +7,23 @@ import {
   Folder,
   FolderOpen,
   GitBranch,
+  Keyboard,
   Loader2,
   Minus,
   Plus,
   Save,
 } from 'lucide-react';
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { ipcClient } from '@/lib/api/ipcClient';
 import { useSettings, useUpdateSettings } from '@/lib/hooks/useSettings';
+import {
+  formatShortcutLabel,
+  getShortcutFromKeyboardEvent,
+  hasModifier,
+  isMacOS,
+} from '@/lib/shortcuts';
 import { useUiStore } from '@/stores/uiStore';
+import { DEFAULT_SHORTCUTS, mergeShortcuts } from '../../shared/shortcutDefaults';
 
 const FRONTMATTER_FEATURES = [
   { icon: CheckSquare, label: 'Status management (ToDo, In Progress, Review, Completed)' },
@@ -31,6 +40,64 @@ interface DirectoryEntry {
   path: string;
 }
 
+const SHORTCUT_ITEMS: Array<{
+  action: ShortcutAction;
+  label: string;
+  description: string;
+  section: 'Global' | 'Command Palette';
+}> = [
+  {
+    action: 'openCommandPalette',
+    label: 'Command Palette',
+    description: 'Open the command palette.',
+    section: 'Global',
+  },
+  {
+    action: 'openQuickOpen',
+    label: 'Quick Open',
+    description: 'Open plan search and jump.',
+    section: 'Global',
+  },
+  {
+    action: 'commandGoHome',
+    label: 'Go to Home',
+    description: 'Run "Go to Home" from Command Palette.',
+    section: 'Command Palette',
+  },
+  {
+    action: 'commandGoSearch',
+    label: 'Go to Search',
+    description: 'Run "Go to Search" from Command Palette.',
+    section: 'Command Palette',
+  },
+  {
+    action: 'commandOpenSettings',
+    label: 'Open Settings',
+    description: 'Run "Open Settings" from Command Palette.',
+    section: 'Command Palette',
+  },
+  {
+    action: 'commandToggleTheme',
+    label: 'Toggle Theme',
+    description: 'Run "Toggle Theme" from Command Palette.',
+    section: 'Command Palette',
+  },
+  {
+    action: 'commandOpenQuickOpen',
+    label: 'Open Quick Open (Command)',
+    description: 'Run "Open Quick Open" from Command Palette.',
+    section: 'Command Palette',
+  },
+  {
+    action: 'commandOpenCurrentReview',
+    label: 'Open Current Review',
+    description: 'Run "Open Review for current plan" from Command Palette.',
+    section: 'Command Palette',
+  },
+];
+
+const SHORTCUT_SECTIONS: Array<'Global' | 'Command Palette'> = ['Global', 'Command Palette'];
+
 function createDirectoryEntry(path = ''): DirectoryEntry {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
@@ -43,6 +110,12 @@ function toDirectoryEntries(paths: string[] | undefined): DirectoryEntry[] {
   return source.map((path) => createDirectoryEntry(path));
 }
 
+function areShortcutsEqual(left: AppShortcuts, right: AppShortcuts): boolean {
+  return (Object.keys(DEFAULT_SHORTCUTS) as ShortcutAction[]).every(
+    (action) => left[action] === right[action]
+  );
+}
+
 export function SettingsPage() {
   const { data: settings, isLoading, error } = useSettings();
   const updateSettings = useUpdateSettings();
@@ -50,6 +123,10 @@ export function SettingsPage() {
   const frontmatterHeadingId = useId();
   const [directoryEntries, setDirectoryEntries] = useState<DirectoryEntry[]>([]);
   const [pickingDirectoryId, setPickingDirectoryId] = useState<string | null>(null);
+  const [editingShortcut, setEditingShortcut] = useState<ShortcutAction | null>(null);
+  const [localShortcuts, setLocalShortcuts] = useState<AppShortcuts>(DEFAULT_SHORTCUTS);
+  const macOS = isMacOS();
+
   const savedDirectories =
     settings?.planDirectories && settings.planDirectories.length > 0
       ? settings.planDirectories
@@ -58,6 +135,11 @@ export function SettingsPage() {
     new Set(directoryEntries.map((entry) => entry.path.trim()).filter(Boolean))
   );
   const hasDirectoryChanges = normalizedDirectories.join('\n') !== savedDirectories.join('\n');
+
+  const currentShortcuts: AppShortcuts = useMemo(
+    () => mergeShortcuts(settings?.shortcuts),
+    [settings?.shortcuts]
+  );
 
   useEffect(() => {
     if (hasDirectoryChanges && directoryEntries.length > 0) return;
@@ -75,6 +157,58 @@ export function SettingsPage() {
       return source.map((path) => createDirectoryEntry(path));
     });
   }, [settings?.planDirectories, hasDirectoryChanges, directoryEntries.length]);
+
+  useEffect(() => {
+    setLocalShortcuts((previous) => {
+      if (areShortcutsEqual(previous, currentShortcuts)) {
+        return previous;
+      }
+      return currentShortcuts;
+    });
+  }, [currentShortcuts]);
+
+  useEffect(() => {
+    if (!editingShortcut) return undefined;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (event.key === 'Escape') {
+        setEditingShortcut(null);
+        return;
+      }
+
+      const captured = getShortcutFromKeyboardEvent(event);
+      if (!captured) return;
+
+      if (!hasModifier(captured)) {
+        addToast('Shortcut must include at least one modifier key', 'error');
+        return;
+      }
+
+      const nextShortcuts: AppShortcuts = {
+        ...localShortcuts,
+        [editingShortcut]: captured,
+      };
+
+      setLocalShortcuts(nextShortcuts);
+      setEditingShortcut(null);
+
+      void (async () => {
+        try {
+          await updateSettings.mutateAsync({ shortcuts: nextShortcuts });
+          addToast('Shortcut updated', 'success');
+        } catch {
+          setLocalShortcuts(currentShortcuts);
+          addToast('Failed to update shortcut', 'error');
+        }
+      })();
+    };
+
+    window.addEventListener('keydown', onKeyDown, true);
+    return () => window.removeEventListener('keydown', onKeyDown, true);
+  }, [addToast, currentShortcuts, editingShortcut, localShortcuts, updateSettings]);
 
   if (isLoading) {
     return (
@@ -154,7 +288,7 @@ export function SettingsPage() {
     <div className="max-w-2xl">
       <h1 className="text-2xl font-bold mb-6">Settings</h1>
 
-      <div className="rounded-lg border bg-card p-6 mb-6">
+      <div className="rounded-lg border bg-card p-6 mb-4">
         <div className="flex items-center justify-between">
           <div>
             <h2 id={frontmatterHeadingId} className="text-lg font-semibold">
@@ -212,7 +346,7 @@ export function SettingsPage() {
         </p>
       </div>
 
-      <div className="rounded-lg border bg-card p-6">
+      <div className="rounded-lg border bg-card p-6 mb-4">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold">Plan Directories</h2>
@@ -285,6 +419,63 @@ export function SettingsPage() {
             Save Directories
           </button>
         </div>
+      </div>
+
+      <div className="rounded-lg border bg-card p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold">Keyboard Shortcuts</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Customize app shortcuts. Click a shortcut and press the new key combination.
+            </p>
+          </div>
+          <Keyboard className="h-5 w-5 text-muted-foreground shrink-0" />
+        </div>
+
+        <div className="mt-4 space-y-4">
+          {SHORTCUT_SECTIONS.map((section) => {
+            const sectionItems = SHORTCUT_ITEMS.filter((item) => item.section === section);
+            return (
+              <section key={section}>
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {section}
+                </h3>
+                <div className="space-y-3">
+                  {sectionItems.map((item) => {
+                    const isEditing = editingShortcut === item.action;
+                    const shortcutLabel = isEditing
+                      ? 'Press shortcut...'
+                      : formatShortcutLabel(localShortcuts[item.action], macOS);
+
+                    return (
+                      <div
+                        key={item.action}
+                        className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">{item.label}</p>
+                          <p className="text-xs text-muted-foreground">{item.description}</p>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={updateSettings.isPending}
+                          onClick={() => setEditingShortcut(item.action)}
+                          className="inline-flex min-w-[172px] items-center justify-center rounded-md border border-input bg-background px-3 py-2 font-mono text-xs text-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {shortcutLabel}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+
+        <p className="mt-3 text-xs text-muted-foreground">
+          Press Esc while capturing to cancel. Shortcuts must include at least one modifier key.
+        </p>
       </div>
     </div>
   );

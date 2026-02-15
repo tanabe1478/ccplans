@@ -5,6 +5,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_SHORTCUTS } from '../../../../shared/shortcutDefaults';
 
 // Mock window.electronAPI
 const mockInvoke = vi.fn();
@@ -174,7 +175,11 @@ describe('ipcClient', () => {
   describe('settings', () => {
     it('should call settings:get channel', async () => {
       const { ipcClient } = await import('../ipcClient');
-      mockInvoke.mockResolvedValueOnce({ settings: {} });
+      mockInvoke.mockResolvedValueOnce({
+        frontmatterEnabled: true,
+        planDirectories: ['~/.claude/plans'],
+        shortcuts: DEFAULT_SHORTCUTS,
+      });
 
       await ipcClient.settings.get();
 
@@ -184,18 +189,21 @@ describe('ipcClient', () => {
     it('should call settings:update channel', async () => {
       const { ipcClient } = await import('../ipcClient');
       mockInvoke.mockResolvedValueOnce({
-        frontmatterEnabled: true,
+        frontmatterEnabled: false,
         planDirectories: ['~/.claude/plans'],
+        shortcuts: DEFAULT_SHORTCUTS,
       });
 
       await ipcClient.settings.update({
         frontmatterEnabled: true,
         planDirectories: ['~/.claude/plans'],
+        shortcuts: DEFAULT_SHORTCUTS,
       });
 
       expect(mockInvoke).toHaveBeenCalledWith('settings:update', {
         frontmatterEnabled: true,
         planDirectories: ['~/.claude/plans'],
+        shortcuts: DEFAULT_SHORTCUTS,
       });
     });
 
